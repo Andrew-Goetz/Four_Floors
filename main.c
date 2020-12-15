@@ -95,7 +95,7 @@ void help() {
   *
   * Calls freeCharacter if health is <= 0
  */
-void nextTurn(Character *c1, Character *c2) {
+bool nextTurn(Character *c1, Character *c2) {
     //@TODO if needed, need to rework this so more than two characters can fight at once
     assert(c1->isTurn && !c2->isTurn); /* make sure arguments are in correct order */
 
@@ -126,6 +126,7 @@ void nextTurn(Character *c1, Character *c2) {
         c1->isTurn = false;
         c2->isTurn = true;
     }
+	return true; /* Characters still alive, game continues */
 }
 
 /** Call when input from player is required, c must be the player character, m the monster */
@@ -140,31 +141,35 @@ void input(Character *c, Character *m) {
 	/***** Commands: *****/
 	do {
 		/* help(h): lists out possible commands and a little how to play */
+		if(strcmp(input, "help") == 0 || strcmp(input, "h") == 0)
 			help();
 			isValidInput = true;
 		}
 
-		/* attack(a): calls */
-		else if(strcmp(input, "attack") || strcmp(input, "a")) {
-			
+		/* attack(a): calls meleeAttack */
+		//@TODO add argument for different types of attacks later, maybe this instead of dedicated magic command?
+		else if(strcmp(input, "attack") == 0 || strcmp(input, "a") == 0) {
+			meleeAttack(c, m);
 			isValidInput = true;
 		}
 
 		/* status(a): check status of player character, c */
 		//@TODO add argument to status to check status of monster as well, will support multiple characters
-		else if(strcmp(input, "status") || strcmp(input, "s")) {
-			status(Character(c));
+		else if(strcmp(input, "status") == 0 || strcmp(input, "s") == 0) {
+			status(c);
 			isValidInput = true;
 		}
 
 		/* wait(w): do nothing */	
-		else if(strcmp(input, "wait") || strcmp(input, "w")) {
+		else if(strcmp(input, "wait") == 0 || strcmp(input, "w") == 0) {
 			printf("%s does absolutely nothing\n\n", c->name);
+			nextTurn(c, m);
 			isValidInput = true;
 		}
 
 		/* escape(exit): exits the program, maybe serve a practical purpose if adding ranged weapons/magic? */
-		else if(strcmp(input, "wait") || strcmp(input, "w")) {
+		/* shortcut is "exit" instead of "e" to avoid accidental exit */
+		else if(strcmp(input, "escape") == 0 || strcmp(input, "exit") == 0) {
 			printf("%s runs away in shame\n\n", c->name);
 			freeCharacter(c); freeCharacter(m);
 			exit(0);
@@ -183,5 +188,8 @@ void input(Character *c, Character *m) {
 int main() {
 	Character *player = newPlayerCharacter();
 	Character *monster = newCharacter();
+	while(player->isTurn) {
+		input(player, monster);
+	}
     return 0;
 }
