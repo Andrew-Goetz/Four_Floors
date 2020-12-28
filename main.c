@@ -5,6 +5,9 @@
 #include <string.h>
 
 /*********** Constants ************/
+
+#define MAX_INPUT_LENGTH 31 /* No input greater than MAX_INPUT_LENGTH-1 characters allowed */
+
 /* Player's starting stats */
 const unsigned char STARTING_PLAYER_HEALTH = 5;
 const unsigned char STARTING_PLAYER_ATTACK = 1;
@@ -14,47 +17,55 @@ const unsigned char MONSTER_HEALTH = 3;
 const unsigned char MONSTER_ATTACK = 1;
 const char MONSTER_NAME[] = "The monster";
 
-#define MAX_INPUT_LENGTH 9
-
 /** Defines a generic character */
 typedef struct Characters {
 	unsigned char health;
-	//  unsigned char mana;
+	//unsigned char mana;
 	unsigned char attack;
-	//  unsigned char defense;
+	//unsigned char defense;
 	bool isTurn; /* True if character's turn, false if not */
 	bool isPlayerCharacter;
-	char name[MAX_INPUT_LENGTH];
+	unsigned char name[MAX_INPUT_LENGTH];
 } Character;
 
+/** Call to format input, only call once immediately after fgets() or assert will fail */
+void formatInput(Character *c) {
+	assert(c->name[strlen(c->name)-1] == '\n');
+	c->name[strlen(c->name)-1] = '\0';
+}
+
 /** Creates a new player character, should only be called once until multiplayer is added */
-Character newPlayerCharacter() {
-	Character c;
-	c.health = STARTING_PLAYER_HEALTH;
-	c.attack = STARTING_PLAYER_ATTACK;
-	c.isTurn = true; /* Player gets the first turn */
-	c.isPlayerCharacter = true;
-	sscanf(stdin, "Enter the character's name: %s\n", c.name);
-	printf("%s has %u health\n", c.name, c.health);
-	printf("%s has %u attack power\n", c.name, c.attack);
+Character* newPlayerCharacter() {
+	Character *c = malloc(sizeof(*c));
+	c->health = STARTING_PLAYER_HEALTH;
+	c->attack = STARTING_PLAYER_ATTACK;
+	c->isTurn = true; /* Player gets the first turn */
+	c->isPlayerCharacter = true;
+	printf("Enter the character's name: ");
+	fgets(c->name, MAX_INPUT_LENGTH, stdin);
+	formatInput(c);
+//	c.name[strlen(c.name)-1] = '\0';
+
+	printf("%s has %u health\n", c->name, c->health);
+	printf("%s has %u attack power\n", c->name, c->attack);
 	printf("Type help(h) for how to play\n");
 	return c;
 }
 
 /** Creates a new non-player character */
-Character newCharacter() {
-	Character c;
-	c.health = MONSTER_HEALTH;
-	c.attack = MONSTER_ATTACK;
-	c.isTurn = false; /* Player gets the first turn */
-	c.isPlayerCharacter = false;
-	strcpy(c.name, MONSTER_NAME);
-	printf("%s has appeared!\n", c.name);
-	printf("%s has %u health\n", c.name, c.health);
-	printf("%s has %u attack power\n", c.name, c.attack);
+Character* newCharacter() {
+	Character *c = malloc(sizeof(*c));
+	c->health = MONSTER_HEALTH;
+	c->attack = MONSTER_ATTACK;
+	c->isTurn = false; /* Player gets the first turn */
+	c->isPlayerCharacter = false;
+	strcpy(c->name, MONSTER_NAME);
+	printf("%s has appeared!\n", c->name);
+	printf("%s has %u health\n", c->name, c->health);
+	printf("%s has %u attack power\n", c->name, c->attack);
 	return c;
 }
-
+//#if 0
 /** Ends the turn, changing the state of isTurn for both characters.
  * Also determines if one of the characters is dead,
  * exits program if the character has died, //@TODO change this later
@@ -173,17 +184,17 @@ void input(Character c, Character m) {
 		}
 	} while(!isValidInput); /* ask user for input again if the last input was invalid */
 }
-
-/** Main function, calls the previous functions to make game */
+//#endif
 //@TODO add levels in another file with their own function per level, have main call them
 int main() {
-	Character player = newPlayerCharacter();
-	Character monster = newCharacter();
-	while(player.health > 0 && monster.health > 0) {
-		while(player.isTurn) {
-			input(player, monster);
-		}
-		meleeAttack(monster, player);
-	}
+	Character *player = newPlayerCharacter();
+	Character *monster = newCharacter();
+//	while(player.health > 0 && monster.health > 0) {
+//		while(player.isTurn) {
+//			input(player, monster);
+//		}
+//		meleeAttack(monster, player);
+//	}
+	//printf("%c, then %c\n", player.name[5], player.name[6]);
 	return 0;
 }
