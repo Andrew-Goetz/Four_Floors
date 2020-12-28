@@ -71,32 +71,32 @@ Character* newCharacter() {
  * exits program if the character has died, //@TODO change this later
  * NOTE: c1's turn has just ended, c2's turn is now beginning
  */
-bool nextTurn(Character c1, Character c2) {
+bool nextTurn(Character *c1, Character *c2) {
 	//@TODO if needed, need to rework this so more than two characters can fight at once
-	assert(c1.isTurn && !c2.isTurn); /* make sure arguments are in correct order */
+	assert(c1->isTurn && !c2->isTurn); /* make sure arguments are in correct order */
 
-	if(c1.health <= 0) {
-		printf("%s has died!\n", c1.name);
-		if(c1.isPlayerCharacter) {
+	if(c1->health <= 0) {
+		printf("%s has died!\n", c1->name);
+		if(c1->isPlayerCharacter) {
 			printf("GAME OVER!\n");
 			exit(0);
 		} else {
-			printf("%s is victorious!\n", c2.name);
+			printf("%s is victorious!\n", c2->name);
 			exit(0);
 		}
-	} else if(c2.health <= 0) {
-		printf("%s has died!\n", c2.name);
-		if(c2.isPlayerCharacter) {
+	} else if(c2->health <= 0) {
+		printf("%s has died!\n", c2->name);
+		if(c2->isPlayerCharacter) {
 			printf("GAME OVER!\n");
 			exit(0);
 		} else {
-			printf("%s is victorious!\n", c1.name);
+			printf("%s is victorious!\n", c1->name);
 			exit(0);
 		}
 	} 
-	assert(c1.health > 0 && c2.health > 0);
-	c1.isTurn = false;
-	c2.isTurn = true;
+	assert(c1->health > 0 && c2->health > 0);
+	c1->isTurn = false;
+	c2->isTurn = true;
 	return true; /* Characters still alive, game continues */
 }
 
@@ -108,17 +108,17 @@ bool nextTurn(Character c1, Character c2) {
  *
  *  Calls nextTurn.
  */
-void meleeAttack(Character attacker, Character c) {
-	printf("%s attacks %s!\n", attacker.name, c.name);
-	c.health -= attacker.attack;
-	printf("%s took %u damage!", c.name, attacker.attack);
+void meleeAttack(Character *attacker, Character *c) {
+	printf("%s attacks %s!\n", attacker->name, c->name);
+	c->health -= attacker->attack;
+	printf("%s took %u damage!\n", c->name, attacker->attack);
 	nextTurn(attacker, c);
 }
 
 /** Output stats of character pointed to by c */
-void status(Character c) {
+void status(Character *c) {
 	printf("%s's stats:\n\tHealth:%d/%d\n\tAttack:%d\n",
-			c.name, c.health, STARTING_PLAYER_HEALTH, c.attack);
+			c->name, c->health, STARTING_PLAYER_HEALTH, c->attack);
 }
 
 /** Output help info */
@@ -135,8 +135,8 @@ void help() {
 /** Call when input from player is required, c must be the player character, m the monster */
 //@TODO work needed for this function to support multiple monsters/players
 //@TODO make case insensitive, should be attack or ATTACK or AtTacK or A instead of just lower case
-void input(Character c, Character m) {
-	assert(c.isPlayerCharacter);
+void input(Character *c, Character *m) {
+	assert(c->isPlayerCharacter);
 	char input[MAX_INPUT_LENGTH];
 	bool isValidInput = true;
 	scanf("Enter command: %s\n", input);
@@ -165,15 +165,15 @@ void input(Character c, Character m) {
 
 		/* wait(w): do nothing */	
 		else if(strcmp(input, "wait") == 0 || strcmp(input, "w") == 0) {
-			printf("%s does absolutely nothing\n\n", c.name);
+			printf("%s does absolutely nothing\n\n", c->name);
 			nextTurn(c, m);
 			isValidInput = true;
 		}
 
 		/* escape(exit): exits the program, maybe serve a practical purpose if adding ranged weapons/magic? */
-		/* shortcut is "exit" instead of "e" to avoid accidental exit */
+		/* shortcut is "exit" instead of "e" to avoid accidental exits */
 		else if(strcmp(input, "escape") == 0 || strcmp(input, "exit") == 0) {
-			printf("%s runs away in shame\n\n", c.name);
+			printf("%s runs away in shame\n\n", c->name);
 			exit(0);
 		}
 
