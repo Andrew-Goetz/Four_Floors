@@ -17,6 +17,7 @@ const unsigned char MONSTER_HEALTH = 3;
 const unsigned char MONSTER_ATTACK = 1;
 const char MONSTER_NAME[] = "The monster";
 
+
 /** Defines a generic character */
 typedef struct Characters {
 	unsigned char health;
@@ -25,13 +26,15 @@ typedef struct Characters {
 	//unsigned char defense;
 	bool isTurn; /* True if character's turn, false if not */
 	bool isPlayerCharacter;
-	unsigned char name[MAX_INPUT_LENGTH];
+	char name[MAX_INPUT_LENGTH];
 } Character;
 
-/** Call to format input, only call once immediately after fgets() or assert will fail */
-void formatInput(Character *c) {
-	assert(c->name[strlen(c->name)-1] == '\n');
-	c->name[strlen(c->name)-1] = '\0';
+/** Call to get input, formats to get rid of trailing \n */
+void getInput(char input[], char message[]) {
+	printf("%s", message);
+	fgets(input, MAX_INPUT_LENGTH, stdin);
+	assert(input[strlen(input)-1] == '\n'); /* Something weird if this fails */
+	input[strlen(input)-1] = '\0';
 }
 
 /** Creates a new player character, should only be called once until multiplayer is added */
@@ -41,9 +44,7 @@ Character* newPlayerCharacter() {
 	c->attack = STARTING_PLAYER_ATTACK;
 	c->isTurn = true; /* Player gets the first turn */
 	c->isPlayerCharacter = true;
-	printf("Enter the character's name: ");
-	fgets(c->name, MAX_INPUT_LENGTH, stdin);
-	formatInput(c);
+	getInput(c->name, "Enter the character's name: ");
 //	c.name[strlen(c.name)-1] = '\0';
 
 	printf("%s has %u health\n", c->name, c->health);
@@ -65,46 +66,52 @@ Character* newCharacter() {
 	printf("%s has %u attack power\n", c->name, c->attack);
 	return c;
 }
+
+/** Frees memopry alloted to a character upon death */
+void freeCharacter(Character *c) {
+	freeCharacter(c);
+}
+
+
 //#if 0
 /** Ends the turn, changing the state of isTurn for both characters.
- * Also determines if one of the characters is dead,
- * exits program if the character has died, //@TODO change this later
- * NOTE: c1's turn has just ended, c2's turn is now beginning
+ *  Also determines if one of the characters is dead, freeing memory if needed.
+ *  Exits program if any character has died. //@TODO change this later to only player character
  */
-bool nextTurn(Character *c1, Character *c2) {
-	//@TODO if needed, need to rework this so more than two characters can fight at once
-	assert(c1->isTurn && !c2->isTurn); /* make sure arguments are in correct order */
-
+void nextTurn(Character *c1, Character *c2) {
+	//@TODO if needed, need to rethink this so more than two characters can fight at once
 	if(c1->health <= 0) {
-		printf("%s has died!\n", c1->name);
+		printf("%s has defeated %s!\n", c2->name, c1->name);
 		if(c1->isPlayerCharacter) {
 			printf("GAME OVER!\n");
+			freeCharacter(c1); freeCharacter(c2);
 			exit(0);
 		} else {
-			printf("%s is victorious!\n", c2->name);
+			printf("VICTORY!\n");
+			freeCharacter(c1); freeCharacter(c2);
 			exit(0);
 		}
 	} else if(c2->health <= 0) {
-		printf("%s has died!\n", c2->name);
+		printf("%s has defeated %s!\n", c2->name, c1->name);
 		if(c2->isPlayerCharacter) {
 			printf("GAME OVER!\n");
+			freeCharacter(c1); freeCharacter(c2);
 			exit(0);
 		} else {
-			printf("%s is victorious!\n", c1->name);
+			printf("VICTORY!\n");
+			freeCharacter(c1); freeCharacter(c2);
 			exit(0);
 		}
 	} 
 	assert(c1->health > 0 && c2->health > 0);
-	c1->isTurn = false;
-	c2->isTurn = true;
-	return true; /* Characters still alive, game continues */
+	!c1->isTurn; !c2->isTurn;
 }
 
 /** Takes two character, and character attacker and character c.
  *  Checks to make sure arguments are in correct order,
  *  then subtracts c's health by attacker's attack value.
  *  Called "melee" because there will be other attacks later.
- *  First argument inflicts damage upon second argument.
+ *  First character (attacker) deals damage to second character (c).
  *
  *  Calls nextTurn.
  */
@@ -132,15 +139,25 @@ void help() {
 			"\n");
 }
 
-/** Call when input from player is required, c must be the player character, m the monster */
+/** Calls next turn */
+void wait(Character *c, Character *m) {
+	printf("%s does nothing\n\n", c->name);
+	nextTurn(c, m);
+}
+
+void escape(Character *c) {
+	printf("%s runs away in shame\n\n", c->name);
+	exit(0);
+}
+
+/** Call when input is required, c must be the player character, m the monster */
 //@TODO work needed for this function to support multiple monsters/players
 //@TODO make case insensitive, should be attack or ATTACK or AtTacK or A instead of just lower case
-void input(Character *c, Character *m) {
+void actions(Character *c, Character *m) {
 	assert(c->isPlayerCharacter);
-	char input[MAX_INPUT_LENGTH];
+	unsigned char input[MAX_INPUT_LENGTH];
 	bool isValidInput = true;
-	scanf("Enter command: %s\n", input);
-
+	getInput(input, ">> ");
 	/***** Commands: *****/
 	do {
 		/* help(h): lists out possible commands and a little how to play */
@@ -165,8 +182,7 @@ void input(Character *c, Character *m) {
 
 		/* wait(w): do nothing */	
 		else if(strcmp(input, "wait") == 0 || strcmp(input, "w") == 0) {
-			printf("%s does absolutely nothing\n\n", c->name);
-			nextTurn(c, m);
+			wait(c, m);
 			isValidInput = true;
 		}
 
@@ -174,7 +190,7 @@ void input(Character *c, Character *m) {
 		/* shortcut is "exit" instead of "e" to avoid accidental exits */
 		else if(strcmp(input, "escape") == 0 || strcmp(input, "exit") == 0) {
 			printf("%s runs away in shame\n\n", c->name);
-			exit(0);
+			exit(0); //@TODO this doesn't free stuff
 		}
 
 		/* invalid command */
@@ -185,16 +201,15 @@ void input(Character *c, Character *m) {
 	} while(!isValidInput); /* ask user for input again if the last input was invalid */
 }
 //#endif
-//@TODO add levels in another file with their own function per level, have main call them
-int main() {
-	Character *player = newPlayerCharacter();
+
+void lvl0(Character *player) {
 	Character *monster = newCharacter();
-//	while(player.health > 0 && monster.health > 0) {
-//		while(player.isTurn) {
-//			input(player, monster);
-//		}
-//		meleeAttack(monster, player);
-//	}
+	actions(player, monster);
 	//printf("%c, then %c\n", player.name[5], player.name[6]);
+}
+
+int main() {
+	Character *player = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
+	lvl0(player);
 	return 0;
 }
