@@ -13,9 +13,9 @@
 
 /* Player's starting stats */
 const unsigned char STARTING_PLAYER_HEALTH = 5;
+const unsigned char STARTING_PLAYER_MANA = 3;
 const unsigned char STARTING_PLAYER_ATTACK = 2;
 const unsigned char STARTING_PLAYER_DEFENSE = 1;
-const unsigned char STARTING_PLAYER_MANA = 3;
 
 /* Monster's stats, will assign different ones for each monster type in future */
 const unsigned char MONSTER_HEALTH = 3;
@@ -23,23 +23,24 @@ const unsigned char MONSTER_ATTACK = 2;
 const char MONSTER_NAME[] = "The monster";
 
 /** Lists out items and spells */
-typedef enum extras {
-	/* Nothing, the default inventory slot state */
-	NOTHING,
-	/* Items */
-	RED_POTION,
-	GREATER_RED_POTION,
-	BLUE_POTION,
-	GREATER_BLUE_POTION,
-	TEARS,
-	IRON_PELLET,
-	DEMON_FIRE,
-	LIGHT_VIAL,
+typedef enum ITEMS_AND_SPELLS {
+	/* Nothing is the default inventory and spell slot state */
+	NOTHING=0,
 	/* Spells */
-	FIREBALL,
-	LIGHTNING_STAKE,
-	SUMMON_SHEEP,
-	SACRIFICIAL_BRAND
+	RED_POTION=1,
+	GREATER_RED_POTION=2,
+	BLUE_POTION=3,
+	GREATER_BLUE_POTION=4,
+	TEARS=5,
+	IRON_PELLET=6,
+	DEMON_FIRE=7,
+	LIGHT_VIAL=8,
+	/* Spells */
+	FIREBALL=9,
+	LIGHTNING_STAKE=10,
+	SUMMON_SHEEP=11,
+	SACRIFICIAL_BRAND=12,
+	FROST_RESONANCE=13
 } Item, Spell;
 
 /* Item descriptions, be precise about health and mana but not specific on attack/defense effects */
@@ -52,15 +53,21 @@ const char TEARS_DESCRIPTION[] = "The tears of a fallen hero and his broken prom
 const char IRON_PELLET_DESCRIPTION[] = "A foul tasting medicine of foreign origin.\nMakes the skin solid as iron for a single turn.";
 const char DEMON_FIRE_DESCRIPTION[] = "The flames of ancient demons, captured in a vial by coastal wizards.\nSmashing this vial will make enemies erupt into flames.";
 const char LIGHT_VIAL_DESCRIPTION[] = "A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.";
+/* Spells */
 const char FIREBALL_DESCRIPTION[] = "The magic of the southern deserts, it radiates blue with magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.";
 const char LIGHTNING_STAKE_DESCRIPTION[] = "The magic of the eastern dragon slayers.\nSmash lightning into the earth, shocking surroundings.";
-const char SUMMON_SHEEP_DESCRIPTION[] = "The magic of a northern blizzard.\nSummons a sheep, which might possibly explode.";
+const char SUMMON_SHEEP_DESCRIPTION[] = "The magic of a madman.\nSummons a sheep, which might possibly explode.";
 const char SACRIFICIAL_BRAND_DESCRIPTION[] = "The magic of the flagellants. Carve a brand into arm.\nKills the next enemy that touches you, but reduces health to 1 when attacked.";
+const char FROST_RESONANCE_DESCRIPTION[] = "The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.";
 
 /** Defines a player character */
 typedef struct Characters {
+	char totalHealth;
+	char totalMana;
+	Item inventory;
+	Spell spellSlot;
 	char health; /* character dead if(health <= 0) */
-	unsigned char mana;
+	unsigned char mana; /* Negative mana not allowed, if not enough mana cannot cast a spell */
 	unsigned char attack;
 	char defense; //@TODO decide whether negative defense is possible or not
 	bool isPlayerCharacter;
@@ -89,6 +96,11 @@ void enterToContinue(char message[]) {
 Character* newPlayerCharacter() {
 	/* Create character */
 	Character *c = malloc(sizeof(*c));
+	c->totalHealth = STARTING_PLAYER_HEALTH;
+	c->totalMana = STARTING_PLAYER_MANA;
+	c->inventory = NOTHING;
+	c->spellSlot = NOTHING;
+
 	c->health = STARTING_PLAYER_HEALTH;
 	c->mana = STARTING_PLAYER_MANA;
 	c->attack = STARTING_PLAYER_ATTACK;
@@ -99,7 +111,6 @@ Character* newPlayerCharacter() {
 
 	printf("%s has %u health.\n", c->name, c->health);
 	printf("%s has %u attack power.\n", c->name, c->attack);
-	printf("Type help(h) for how to play\n");
 
 	printf("%s approaches the mansion.\n", c->name);
 	printf("What might lie on the fourth floor?\n");
@@ -115,8 +126,6 @@ Character* newCharacter(char message[]) {
 	c->isPlayerCharacter = false;
 	strcpy(c->name, MONSTER_NAME);
 	printf("%s %s\n", c->name, message);
-	printf("%s has %u health\n", c->name, c->health);
-	printf("%s has %u attack power\n", c->name, c->attack);
 	return c;
 }
 
@@ -129,12 +138,12 @@ void lvlUp(Character *c) {
 	do {
 		getInput(input, ">> ");
 		if(strcasecmp(input, "health") == 0 || strcasecmp(input, "h") == 0) {
-			c->health++;
+			c->totalHealth++; c->health++;
 			printf("%s's feels healthier.\n\n", c->name);
 			isValidInput = true;
 		}
 		else if(strcasecmp(input, "mana") == 0 || strcasecmp(input, "m") == 0) {
-			c->mana++;
+			c->totalMana++; c->mana++;
 			printf("%s's feels more intelligent.\n\n", c->name);
 			isValidInput = true;
 		}
@@ -154,40 +163,7 @@ void lvlUp(Character *c) {
 		}
 	} while(!isValidInput);
 }
-#if 0
-/** Ends the turn, changing the state of isTurn for both characters.
- *  Also determines if one of the characters is dead, freeing memory if needed.
- *  Exits program if any character has died. //@TODO change this later to only player character
- */
-bool nextTurn(Character *c1, Character *c2) {
-	if(c1->health <= 0) {
-		printf("%s has defeated %s!\n", c2->name, c1->name);
-		if(c1->isPlayerCharacter) {
-			printf("GAME OVER!\n");
-			free(c1); free(c2);
-			exit(0);
-		} else {
-			printf("VICTORY!\n");
-			free(c1); free(c2);
-			exit(0);
-		}
-	} else if(c2->health <= 0) {
-		printf("%s has defeated %s!\n", c2->name, c1->name);
-		if(c2->isPlayerCharacter) {
-			printf("GAME OVER!\n");
-			free(c1); free(c2);
-			exit(0);
-		} else {
-			printf("VICTORY!\n");
-			free(c1); free(c2);
-			exit(0);
-		}
-	} 
-	assert(c1->health > 0 && c2->health > 0);
-	!c1->isTurn; !c2->isTurn;
-	return true;
-}
-#endif
+
 /** Takes two character, and character attacker and character c.
  *  Checks to make sure arguments are in correct order,
  *  then subtracts c's health by attacker's attack value.
@@ -201,7 +177,7 @@ void meleeAttack(Character *attacker, Character *c) {
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
-		printf("%s took %u damage!\n\n", c->name, attacker->attack);
+		printf("%s took %u damage!\n\n", c->name, effectiveDamage);
 	} else {
 		printf("%s took no damage!\n\n", c->name);
 	}
@@ -211,7 +187,7 @@ void meleeAttack(Character *attacker, Character *c) {
 /** Output stats of character pointed to by c */
 void status(Character *c) {
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
-			c->name, c->health, STARTING_PLAYER_HEALTH, c->mana, STARTING_PLAYER_MANA,
+			c->name, c->health, c->totalHealth, c->mana, c->totalMana,
 			c->attack, c->defense);
 }
 
@@ -219,26 +195,40 @@ void status(Character *c) {
 void help() {
 	printf("Goal: defeat your foes and stay alive, reach the fourth floor:\n"
 			"\thelp(h)\t\tlists possible commands\n"
-			"\tattack(a)\tattack your foe\n"
 			"\tstatus(s)\tlists out stats, i.e: health\n"
-			"\twait(w)\t\tdaydream\n"
-			"\tescape(exit)\tabandon your quest\n"
+			"\tattack(a)\tattack enemy, ending turn\n"
+			"\tuse(u)\t\tuse item, ending turn\n"
+			"\tcast(c)\t\tcast spell, ending turn\n"
+			"\twait(w)\t\tdo nothing, ending turn\n"
+			"\tescape(exit)\tabandon quest and flee\n"
 			"\n");
+}
+
+/** Use */
+void useItem(Character *c, Character *m) {
+	assert(c->isPlayerCharacter);
+}
+
+/** Cast */
+void castSpell(Character *c, Character *m) {
+	assert(c->isPlayerCharacter);
+
 }
 
 /** Nothing */
 void wait(Character *c) {
 	assert(c->isPlayerCharacter);
-	printf("%s takes a break.\n\n", c->name);
+	printf("%s does nothing.\n\n", c->name);
 	c->isTurn = false;
 }
 
 /** Exit */
 void escape(Character *c, Character *m) {
-	printf("%s runs away in shame.\n\n", c->name);
+	printf("%s runs out of the mansion in shame.\n\n", c->name);
 	free(c); free(m);
 	exit(0);
 }
+
 
 /** Call when input is required, c must be the player character, m the monster */
 void actions(Character *c, Character *m) {
@@ -253,14 +243,18 @@ void actions(Character *c, Character *m) {
 			isValidInput = true;
 		}
 		/* attack(a): calls meleeAttack */
-		//@TODO add argument for different types of attacks later, maybe this instead of dedicated magic command?
 		else if(strcasecmp(input, "attack") == 0 || strcasecmp(input, "a") == 0) {
 			meleeAttack(c, m);
 			isValidInput = true;
 		}
-		/* status(a): check status of player character, c */
-		else if(strcasecmp(input, "status") == 0 || strcasecmp(input, "s") == 0) {
-			status(c);
+		/* use(u): use item currently in player's inventory slot */
+		else if(strcasecmp(input, "use") == 0 || strcasecmp(input, "u") == 0) {
+			useItem(c, m);
+			isValidInput = true;
+		}
+		/* cast(c): cast whatever magic is in player's magic slot */
+		else if(strcasecmp(input, "cast") == 0 || strcasecmp(input, "c") == 0) {
+			castSpell(c, m);
 			isValidInput = true;
 		}
 		/* wait(w): do nothing */	
@@ -293,6 +287,7 @@ void monsterAction(Character *m, Character *c) {
 const unsigned LVL0_SAVE_CODE = 547283;
 void lvl0(Character *player) {
 	Character *monster = newCharacter("appears!");
+	printf("Type help(h) for how to play\n");
 	do {
 		actions(player, monster);
 		if(monster->health <= 0) {
@@ -308,12 +303,12 @@ void lvl0(Character *player) {
 //		printf("state of isTurn: %d\n", player->isTurn);
 	} while(player->health > 0);
 	free(monster);
-	//printf("%c, then %c\n", player.name[5], player.name[6]);
 }
 //@TODO implement a save file in the main function, and perhaps an option to start a new game instead of that
 int main() {
 	Character *player = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
 	lvl0(player);
+	status(player);
 	free(player);
 	return 0;
 }
