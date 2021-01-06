@@ -22,49 +22,55 @@ const unsigned char MONSTER_HEALTH = 3;
 const unsigned char MONSTER_ATTACK = 2;
 const char MONSTER_NAME[] = "The monster";
 
-/** Lists out items and spells */
+/** Lists out items and spells, BuffItems have their own separate inventory slot from regular Items */
 typedef enum ITEMS_AND_SPELLS {
 	/* Nothing is the default inventory and spell slot state */
-	NOTHING=0,
+	NOTHING,
+	/* BuffItems */
+	RED_POTION,
+	GREATER_RED_POTION,
+	BLUE_POTION,
+	GREATER_BLUE_POTION,
+	PANACEA,
+	/* Items */
+	TEARS,
+	IRON_PELLET,
+	DEMON_FIRE,
+	LIGHT_VIAL,
+	HORN_OF_SAUL,
 	/* Spells */
-	RED_POTION=1,
-	GREATER_RED_POTION=2,
-	BLUE_POTION=3,
-	GREATER_BLUE_POTION=4,
-	TEARS=5,
-	IRON_PELLET=6,
-	DEMON_FIRE=7,
-	LIGHT_VIAL=8,
-	/* Spells */
-	FIREBALL=9,
-	LIGHTNING_STAKE=10,
-	SUMMON_SHEEP=11,
-	SACRIFICIAL_BRAND=12,
-	FROST_RESONANCE=13
-} Item, Spell;
+	FIREBALL,
+	LIGHTNING_STAKE,
+	SUMMON_SHEEP,
+	SACRIFICIAL_BRAND,
+	FROST_RESONANCE
+} BuffItem, Item, Spell;
 
 /* Item descriptions, be precise about health and mana but not specific on attack/defense effects */
-const char NOTHING_DESCRIPTION[] = "No item in this inventory slot.\nFind various powerful items as you journey to the fourth floor!";
-const char RED_POTION_DESCRIPTION[] = "A red, slimey liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.";
-const char GREATER_RED_POTION_DESCRIPTION[] = "A red, slimey liquid. Tastes stronger than the regular potion.\nRestores 4 health when used.";
-const char BLUE_POTION_DESCRIPTION[] = "A blue, cold liquid. Is viscous, like syrup.\nRestores 2 mana when used.";
-const char GREATER_BLUE_POTION_DESCRIPTION[] = "A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.";
-const char TEARS_DESCRIPTION[] = "The tears of a fallen hero and his broken promise.\nUsing immediately before a monster deals fatal damage restores health to full.";
-const char IRON_PELLET_DESCRIPTION[] = "A foul tasting medicine of foreign origin.\nMakes the skin solid as iron for a single turn.";
-const char DEMON_FIRE_DESCRIPTION[] = "The flames of ancient demons, captured in a vial by coastal wizards.\nSmashing this vial will make enemies erupt into flames.";
-const char LIGHT_VIAL_DESCRIPTION[] = "A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.";
-/* Spells */
-const char FIREBALL_DESCRIPTION[] = "The magic of the southern deserts, it radiates blue with magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.";
-const char LIGHTNING_STAKE_DESCRIPTION[] = "The magic of the eastern dragon slayers.\nSmash lightning into the earth, shocking surroundings.";
-const char SUMMON_SHEEP_DESCRIPTION[] = "The magic of a madman.\nSummons a sheep, which might possibly explode.";
-const char SACRIFICIAL_BRAND_DESCRIPTION[] = "The magic of the flagellants. Carve a brand into arm.\nKills the next enemy that touches you, but reduces health to 1 when attacked.";
-const char FROST_RESONANCE_DESCRIPTION[] = "The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.";
+const char NOTHING_DESCRIPTION[] = "Nothing in this slot.\nFind powerful items and spells in the mansion.\n";
+const char RED_POTION_DESCRIPTION[] = "A red, slimey liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n";
+const char GREATER_RED_POTION_DESCRIPTION[] = "A red, slimey liquid. Tastes stronger than the regular potion.\nRestores 4 health when used.\n";
+const char BLUE_POTION_DESCRIPTION[] = "A blue, cold liquid. Is viscous, like syrup.\nRestores 2 mana when used.\n";
+const char GREATER_BLUE_POTION_DESCRIPTION[] = "A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.\n";
+const char PANACEA_DESCRIPTION[] = "The cure-all spoken of in ancient legends.\nRemoves any negatives effects, such as poison.\n";
+const char TEARS_DESCRIPTION[] = "The tears of a fallen hero and his broken promise.\nUsing immediately before a monster deals fatal damage restores health to full.\n";
+const char IRON_PELLET_DESCRIPTION[] = "A foul tasting medicine of foreign origin.\nMakes the skin solid as iron for a single turn.\n";
+const char DEMON_FIRE_DESCRIPTION[] = "The flames of ancient demons, captured in a vial by coastal wizards.\nSmashing this vial will make enemies erupt into flames.\n";
+const char LIGHT_VIAL_DESCRIPTION[] = "A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.\n";
+const char HORN_OF_SAUL_DESCRIPTION[] = "A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will destroy it, temporarily granting its user the strength of the gods.\n";
+const char FIREBALL_DESCRIPTION[] = "The magic of the southern deserts, it radiates blue with magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n";
+const char LIGHTNING_STAKE_DESCRIPTION[] = "The magic of the eastern dragon slayers.\nSmash lightning into the earth, shocking surroundings.\n";
+const char SUMMON_SHEEP_DESCRIPTION[] = "The magic of a madman.\nSummons a sheep, which might possibly explode.\n";
+const char SACRIFICIAL_BRAND_DESCRIPTION[] = "The magic of the flagellants. Carve a brand into arm.\nKills the next enemy that touches you, but reduces health to 1 when attacked.\n";
+const char FROST_RESONANCE_DESCRIPTION[] = "The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n";
 
-/** Defines a player character */
+
+/** Defines a generic character */
 typedef struct Characters {
 	char totalHealth;
 	char totalMana;
-	Item inventory;
+	Item itemSlot;
+	BuffItem buffItemSlot;
 	Spell spellSlot;
 	char health; /* character dead if(health <= 0) */
 	unsigned char mana; /* Negative mana not allowed, if not enough mana cannot cast a spell */
@@ -92,13 +98,33 @@ void enterToContinue(char message[]) {
 	printf("\n");
 }
 
+/** Ask simple yes or no questions to user //@TODO maybe this instead of enterToContinue? 
+ *  if yes then return true, if no then return false.
+ */
+bool yes_or_no(char message[]) {
+	char input[MAX_INPUT_LENGTH];
+	bool isValidInput = false;
+	printf("%s", message);
+	while(true) {
+		getInput(input, ">> ");
+		if(strcasecmp(input, "yes") == 0 || strcasecmp(input, "y")) {
+			return true;
+		} else if(strcasecmp(input, "no") == 0 || strcasecmp(input, "n")) {
+			return false;
+		} else {
+			printf("Invalid input.\n");
+		}
+	}
+}
+
 /** Creates a new player character, should only be called once until multiplayer is added */
 Character* newPlayerCharacter() {
 	/* Create character */
 	Character *c = malloc(sizeof(*c));
 	c->totalHealth = STARTING_PLAYER_HEALTH;
 	c->totalMana = STARTING_PLAYER_MANA;
-	c->inventory = NOTHING;
+	c->itemSlot = NOTHING;
+	c->buffItemSlot = NOTHING;
 	c->spellSlot = NOTHING;
 
 	c->health = STARTING_PLAYER_HEALTH;
@@ -162,6 +188,16 @@ void lvlUp(Character *c) {
 			isValidInput = false;
 		}
 	} while(!isValidInput);
+}
+
+/** Ask user to equip item, buffitem, or spell found.
+ *  Pass in player character, particular item that is found, and message.
+ *  Whether "item" is a Spell, BuffItem, or Item will be determined in the function.
+ *  If item, needs to go in itemSlot; if BuffItem, needs to go in buffItemSlot //@TODO decide what's up with spells
+ */
+void item_or_spell_found(Character *c, Item item, char message[]) {
+	assert(c->isPlayerCharacter);
+	//@TODO
 }
 
 /** Takes two character, and character attacker and character c.
