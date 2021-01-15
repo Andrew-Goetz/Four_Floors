@@ -5,12 +5,12 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-/* wait() from unistd.h and strcasecmp() from string.h are non-portable */
+/* wait() from unistd.h and strcasecmp() from string.h are non-portable for other OSes */
 
 /*********** Constants ************/
 
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
-#define SPELLS_IN_GAME 5
+#define SPELLS_IN_GAME 5 /* Total # of spells that exist */
 
 /* Player's starting stats */
 static const unsigned char STARTING_PLAYER_HEALTH = 5;
@@ -20,10 +20,12 @@ static const unsigned char STARTING_PLAYER_DEFENSE = 1;
 
 /* Monster's stats, will assign different ones for each monster type in future */
 static const unsigned char MONSTER_HEALTH = 3;
+static const unsigned char MONSTER_MANA = 0;
 static const unsigned char MONSTER_ATTACK = 2;
+static const unsigned char MONSTER_DEFENSE = 0;
 static const char MONSTER_NAME[] = "The monster";
 
-/** Lists out items and spells, BuffItems have their own separate inventory slot from regular Items */
+/** Lists out items and spells */
 typedef enum ITEMS_AND_SPELLS {
 	/* Nothing(0) is the default inventory and spell slot value */
 	NOTHING,
@@ -47,30 +49,33 @@ typedef enum ITEMS_AND_SPELLS {
 	HORN_OF_SAUL
 } Item;
 
-/* Item/spell descriptions and names, be precise about health and mana but not specific on attack/defense effects */
-static const char *NAMES[16] = {
+/* Item/spell descriptions and names, be precise about health and mana info but not specific on attack/defense effects */
+static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Nothing",
-	"Fireball", "Lightning Stake", "Summon Sheep", "Sacrificial Brand", "Frost Resonance"/* Spells */
-	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* BuffItems */
-	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul", /* Items */
+	"Fireball", "Lightning Stake", "Summon Sheep", "Sacrificial Brand", "Frost Resonance",/* Spells */
+	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* PotionItems */
+	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul" /* Items */
 };
-static const char *DESCRIPTIONS[16] = {
-	"Nothing in this slot.\nFind powerful items and spells in the mansion.\n",
+static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
+	"Nothing in this slot.\nFind powerful items and potions in the mansion.\n",
+
 	"The magic of the southern deserts. It radiates blue with magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
 	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.\n",
 	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.\n",
-	"The magic of the flagellants.\n When used, the next monster to attack the caster is killed, and the health of the caster is reduced to 1.\n",
+	"The magic of the flagellants.\n When used, the enemy is instantly defeated, but the health of the caster is reduced to 1.\n",
 	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n"
+
 	"A red, slimey liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n",
-	"A red, slimey liquid. Tastes stronger than the regular potion.\nRestores 4 health when used.\n",
-	"A blue, cold liquid. Is viscous, like syrup.\nRestores 2 mana when used.\n",
-	"A blue, cold liquid. Even thicker than the regular potion.\nRestores 3 mana when used.\n",
-	"The cure-all spoken of in ancient legends. It glimmers a brilliant gold.\nRemoves any negatives effects, such as poison.\n",
+	"A red, slimey liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.\n",
+	"A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.\n",
+	"A blue, cold liquid. Even thicker than the regular potion.\nRestores 5 mana when used.\n",
+	"The cure-all spoken of in ancient legends. The potion glimmers a brilliant gold.\nRemoves any negative status effects, such as poison.\n",
+
 	"The tears of a fallen hero and his broken promise.\nUsing immediately before a monster deals fatal damage restores health to full.\n",
-	"A foul tasting, chewy medicine. Used by warriors from the east.\nMakes one's skin solid as iron for a single turn.\n",
+	"A foul tasting, chewy medicine. Used by warriors from the east.\nUsing makes one's skin solid as iron for a short time, increasing defense.\n",
 	"The flames of ancient demons, captured in a vial by coastal wizards.\nSmashing this vial will make enemies erupt into flames.\n",
 	"A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.\n",
-	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will destroy it, temporarily granting its user the strength of the gods.\n",
+	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods.\n"
 };
 
 /** Call to get input, formats to get rid of trailing \n if it exists */
@@ -90,13 +95,12 @@ void enterToContinue(char message[]) {
 	printf("\n");
 }
 
-/** Ask simple yes or no questions to user //@TODO maybe this instead of enterToContinue? 
- *  if yes then return true, if no then return false.
+/** Ask simple yes or no questions to user.
+ *  If yes then return true, if no then return false.
  */
 bool yes_or_no(char message[]) {
 	char input[MAX_INPUT_LENGTH];
-	bool isValidInput = false;
-	printf("%s", message);
+	printf("%sYes(y) or No(n)?\n", message); /* assumes message will end with \n */
 	while(true) {
 		getInput(input, ">> ");
 		if(strcasecmp(input, "yes") == 0 || strcasecmp(input, "y") == 0) {
@@ -114,12 +118,12 @@ typedef struct Characters {
 	char totalHealth;
 	char totalMana;
 	Item itemSlot;
-	Item buffItemSlot;
+	Item potionSlot;
 	bool knowSpell[SPELLS_IN_GAME]; /* If true, character knows that spell, corresponds to the order of the spells in the enum */
 	char health; /* character dead if(health <= 0) */
 	unsigned char mana; /* Negative mana not allowed, if not enough mana cannot cast a spell */
 	unsigned char attack;
-	char defense; //@TODO decide whether negative defense is possible or not
+	unsigned char defense; /* no negative defense, total_damage = attacker's_attack - defender's_defense */
 	bool isPlayerCharacter;
 	bool isTurn;
 	char name[MAX_INPUT_LENGTH];
@@ -131,7 +135,7 @@ Character* newPlayerCharacter() {
 	c->totalHealth = STARTING_PLAYER_HEALTH;
 	c->totalMana = STARTING_PLAYER_MANA;
 	c->itemSlot = NOTHING;
-	c->buffItemSlot = NOTHING;
+	c->potionSlot = NOTHING;
 
 	c->health = STARTING_PLAYER_HEALTH;
 	c->mana = STARTING_PLAYER_MANA;
@@ -140,13 +144,21 @@ Character* newPlayerCharacter() {
 	c->isPlayerCharacter = true;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
 	getInput(c->name, "Enter your traveler's name: ");
-
+	
+	//@TODO move following text into main function or level functions
 	printf("%s has %u health.\n", c->name, c->health);
 	printf("%s has %u attack power.\n", c->name, c->attack);
 
 	printf("%s approaches the mansion.\n", c->name);
 	printf("What might lie on the fourth floor?\n");
-	enterToContinue("Press enter to enter the mansion:");
+//	enterToContinue("Press enter to enter the mansion:");
+	bool isYes = yes_or_no("Enter the mansion?\n");
+	if(isYes) {
+		printf("The doors creak open. %s enters the mansion.\n", c->name);
+	} else {
+		printf("Intimidated by the mansion, %s goes back home\n", c->name);
+		free(c); exit(0);
+	}
 	return c;
 }
 
@@ -154,7 +166,9 @@ Character* newPlayerCharacter() {
 Character* newCharacter(char message[]) {
 	Character *c = malloc(sizeof(*c));
 	c->health = MONSTER_HEALTH;
+	c->mana = MONSTER_MANA;
 	c->attack = MONSTER_ATTACK;
+	c->defense = MONSTER_DEFENSE;
 	c->isPlayerCharacter = false;
 	strcpy(c->name, MONSTER_NAME);
 	printf("%s %s\n", c->name, message);
@@ -166,78 +180,27 @@ void lvlUp(Character *c) {
 	assert(c->isPlayerCharacter);
 	printf("Level up avaliable!\nLevel health(h), mana(m), attack(a), or defense(d)?\n");
 	char input[MAX_INPUT_LENGTH];
-	bool isValidInput = true;
-	do {
+	while(true) {
 		getInput(input, ">> ");
 		if(strcasecmp(input, "health") == 0 || strcasecmp(input, "h") == 0) {
 			c->totalHealth++; c->health++;
 			printf("%s feels healthier.\n\n", c->name);
-			isValidInput = true;
-		}
-		else if(strcasecmp(input, "mana") == 0 || strcasecmp(input, "m") == 0) {
+			return;
+		} else if(strcasecmp(input, "mana") == 0 || strcasecmp(input, "m") == 0) {
 			c->totalMana++; c->mana++;
 			printf("%s feels more intelligent.\n\n", c->name);
-			isValidInput = true;
-		}
-		else if(strcasecmp(input, "attack") == 0 || strcasecmp(input, "a") == 0) {
+			return;
+		} else if(strcasecmp(input, "attack") == 0 || strcasecmp(input, "a") == 0) {
 			c->attack++;
 			printf("%s feels more powerful.\n\n", c->name);
-			isValidInput = true;
-		}
-		else if(strcasecmp(input, "defense") == 0 || strcasecmp(input, "d") == 0) {
+			return;
+		} else if(strcasecmp(input, "defense") == 0 || strcasecmp(input, "d") == 0) {
 			c->defense++;
 			printf("%s feels stronger.\n\n", c->name);
-			isValidInput = true;
+			return;
+		} else {
+			printf("Invalid input.\n");
 		}
-		else {
-			printf("Invalid input, try again.\n");
-			isValidInput = false;
-		}
-	} while(!isValidInput);
-}
-
-/** Ask user to equip item, buffitem, or spell found.
- *  Pass in player character, particular item that is found, and message.
- *  Whether "item" is a Spell, BuffItem, or Item will be determined in the function.
- *  If item, needs to go in itemSlot; if BuffItem, needs to go in buffItemSlot //@TODO decide what's up with spells
- */
-void item_or_spell_found(Character *c, Item itemFound, char message[]) {
-	assert(c->isPlayerCharacter);
-	printf("%s\nIts description reads:\n%s", message, DESCRIPTIONS[itemFound]);
-
-	switch(itemFound) { /* Never going to find nothing so skip 0 */
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		case 4:
-			break;
-		case 5:
-			break;
-		case 6:
-			break;
-		case 7:
-			break;
-		case 8:
-			break;
-		case 9:
-			break;
-		case 10:
-			break;
-		case 11:
-			break;
-		case 12:
-			break;
-		case 13:
-			break;
-		case 14:
-			break;
-		case 15:
-			break;
-		default:
-			printf("Error: The item found does not exist.\n");
 	}
 }
 
@@ -245,7 +208,6 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
  *  Checks to make sure arguments are in correct order,
  *  then subtracts c's health by attacker's attack value.
  *  First character (attacker) deals damage to second character (c).
- *  Ends player turn if attacker->isPlayerCharacter.
  */
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
@@ -260,30 +222,166 @@ void meleeAttack(Character *attacker, Character *c) {
 	if(attacker->isPlayerCharacter) attacker->isTurn = false;
 }
 
-/** Output stats of character pointed to by c */
+/** Output stats of player character */
 void status(Character *c) {
+	assert(c->isPlayerCharacter);
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
 			c->name, c->health, c->totalHealth, c->mana, c->totalMana, c->attack, c->defense);
+}
+
+/** Output stats of enemy character */
+void enemyStatus(Character *m) {
+	assert(!m->isPlayerCharacter);
+	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
+			m->name, m->health, m->totalHealth, m->mana, m->totalMana, m->attack, m->defense);
 }
 
 /** Output help info */
 void help() {
 	printf("Goal: defeat your foes and stay alive, reach the fourth floor:\n"
 			"\thelp(h)\t\tlists possible commands\n"
-			"\tstatus(s)\tlists out stats, i.e: health\n"
+			"\tstatus(s)\tlists out player stats, i.e: health\n"
+			"\tenemy(e)\tlists out enemy's stats, i.e: attack\n"
 			"\tattack(a)\tattack enemy, ending turn\n"
-			"\tuse(u)\t\tuse item, ending turn\n"
+			"\tpotion(p)\tdrink potion, ending turn\n"
+			"\titem(i)\t\tuse item, ending turn\n"
 			"\tcast(c)\t\tcast spell, ending turn\n"
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n"
 			"\n");
 }
 
-/** Use */
+/***** Potion Functions *****/
+void red_potion(Character *c, bool isGreater) {
+	char healVal;
+	if(isGreater) {
+		healVal = 5;
+	} else {
+		healVal = 3;
+	}
+	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
+	sleep(1);
+	if(c->health + healVal >= c->totalHealth) {
+		c->health = c->totalHealth;
+		printf("%s is now full health.\n", c->name);
+	} else {
+		c->health += healVal;
+		printf("%s has healed %d health.\n", c->name, healVal);
+	}
+}
+
+void blue_potion(Character *c, bool isGreater) {
+	char manaVal;
+	if(isGreater) {
+		manaVal = 5;
+	} else {
+		manaVal = 3;
+	}
+	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
+	sleep(1);
+	if(c->mana + manaVal >= c->totalMana) {
+		c->mana = c->totalMana;
+		printf("%s is now full mana.\n", c->name);
+	} else {
+		c->mana += manaVal;
+		printf("%s has restored %d mana.\n", c->name, manaVal);
+	}
+}
+
+void panacea(Character *c) {
+	printf("%s drinks the %s. It tastes incredible.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
+	//@TODO whenever status afflictions are implemented
+}
+
+/** Use potion in potionSlot */
+void usePotion(Character *c, bool isInCombat) {
+	assert(c->isPlayerCharacter);
+	switch(c->potionSlot) {
+		case RED_POTION:
+			red_potion(c, false);
+			break;
+		case GREATER_RED_POTION:
+			red_potion(c, true);
+			break;
+		case BLUE_POTION:
+			blue_potion(c, false);
+			break;
+		case GREATER_BLUE_POTION:
+			blue_potion(c, true);
+			break;
+		case PANACEA:
+			panacea(c);
+			break;
+		default:
+			printf("The item had no effect. Must have been a dud!\n");
+			break;
+	}
+	c->itemSlot = NOTHING;
+	if(isInCombat) c->isTurn = false;
+}
+
+/***** Item Functions *****/
+void tears(Character *c) {
+	printf("%s drinks the %s. %s glows warmly.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot], c->name);
+	//@TODO needs to toggle some status for the character that only lasts a turn
+}
+
+void iron_pellet(Character *c) {
+	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
+	//@TODO increase defense but only for a short time (maybe 3 turns?)
+}
+
+void demon_fire(Character *user, Character *c) {
+	//@TODO
+}
+
+void light_vial(Character *user, Character *c) {
+	//@TODO note that this will probably only be useable by player
+}
+
+void horn(Character *user, Character *c) {
+	//@TODO note that this will probably only be useable by player
+}
+
+/** Use item in itemSlot */
 void useItem(Character *c, Character *m) {
 	assert(c->isPlayerCharacter);
-	
+	switch(c->itemSlot) {
+		case TEARS:
+			tears(c);
+			break;
+		case IRON_PELLET:
+			iron_pellet(c);
+			break;
+		case DEMON_FIRE:
+			break;
+		case LIGHT_VIAL:
+			break;
+		case HORN_OF_SAUL:
+			break;
+		default:
+			printf("The item had no effect. Must have been a dud!\n");
+			break;
+	}
+	c->itemSlot = NOTHING;
 	c->isTurn = false;
+}
+
+/***** Spell Functions *****/
+void fireball(Character *caster, Character *c) {
+	//@TODO
+}
+void lightning_stake(Character *caster, Character *c) {
+	//@TODO
+}
+void summon_sheep(Character *caster, Character *c) {
+	//@TODO
+}
+void sacrificial_brand(Character *caster, Character *c) {
+	//@TODO
+}
+void frost_resonance(Character *caster, Character *c) {
+	//@TODO
 }
 
 /** Cast */
@@ -300,7 +398,24 @@ void castSpell(Character *c, Character *m) {
 	/* Need to check knowSpell during input too, make sure user doesn't guess a spell they don't know */
 	if(isMagicUser == 1) { // cast whatever 1 spell the player knows
 		switch(firstSpell) {
-
+			case FIREBALL:
+				fireball(c, m);
+				break;
+			case LIGHTNING_STAKE:
+				lightning_stake(c, m);
+				break;
+			case SUMMON_SHEEP:
+				summon_sheep(c, m);
+				break;
+			case SACRIFICIAL_BRAND:
+				sacrificial_brand(c, m);
+				break;
+			case FROST_RESONANCE:
+				frost_resonance(c, m);
+				break;
+			default:
+				printf("Something goes wrong and %s fails to cast the spell!", c->name);
+				break;
 		}
 	} else if(isMagicUser > 1) {
 		printf("What spell to cast?\n");
@@ -318,20 +433,20 @@ void castSpell(Character *c, Character *m) {
 		char input[MAX_INPUT_LENGTH];
 		while(true) {
 			getInput(input, ">> ");
-			if(strcasecmp(input, "Fireball") == 0 || strcasecmp(input, "f") == 0) {
-				//TODO Need to make functions for each spell
+			if(c->knowSpell[0] && (strcasecmp(input, "Fireball") == 0 || strcasecmp(input, "f") == 0)) {
+				fireball(c, m);
 				break;
-			} else if(strcasecmp(input, "Lightning Stake") == 0 || strcasecmp(input, "L") == 0) {
-				//TODO
+			} else if(c->knowSpell[1] && (strcasecmp(input, "Lightning Stake") == 0 || strcasecmp(input, "L") == 0)) {
+				lightning_stake(c, m);
 				break;
-			} else if(strcasecmp(input, "Summon Sheep") == 0 || strcasecmp(input, "s") == 0) {
-				//TODO
+			} else if(c->knowSpell[2] && (strcasecmp(input, "Summon Sheep") == 0 || strcasecmp(input, "s") == 0)) {
+				summon_sheep(c, m);
 				break;
-			} else if(strcasecmp(input, "Sacrificial Brand") == 0 || strcasecmp(input, "b") == 0) {
-				//TODO
+			} else if(c->knowSpell[3] && (strcasecmp(input, "Sacrificial Brand") == 0 || strcasecmp(input, "b") == 0)) {
+				sacrificial_brand(c, m);
 				break;
-			} else if(strcasecmp(input, "Frost Resonance") == 0 || strcasecmp(input, "r") == 0) {
-				//TODO
+			} else if(c->knowSpell[4] && (strcasecmp(input, "Frost Resonance") == 0 || strcasecmp(input, "r") == 0)) {
+				frost_resonance(c, m);
 				break;
 			} else {
 				printf("Invalid input\n");
@@ -371,13 +486,27 @@ void actions(Character *c, Character *m) {
 			help();
 			return;
 		}
+		/* status(s): outputs current player status */
+		if(strcasecmp(input, "status") == 0 || strcasecmp(input, "s") == 0) {
+			status(c);
+			return;
+		}
+		/* enemy(e): outputs non-player-character's status, and //@TODO a hint to help fight him */
+		if(strcasecmp(input, "enemy") == 0 || strcasecmp(input, "e") == 0) {
+			enemyStatus(m);
+			return;
+		}
 		/* attack(a): calls meleeAttack */
 		else if(strcasecmp(input, "attack") == 0 || strcasecmp(input, "a") == 0) {
 			meleeAttack(c, m);
 			return;
 		}
-		/* use(u): use item currently in player's inventory slot */
-		else if(strcasecmp(input, "use") == 0 || strcasecmp(input, "u") == 0) {
+		/* potion(p): use potion item currently in player's potionSlot */
+		else if(strcasecmp(input, "potion") == 0 || strcasecmp(input, "p") == 0) {
+			usePotion(c, true);
+		}
+		/* item(i): use item currently in player's itemSlot */
+		else if(strcasecmp(input, "item") == 0 || strcasecmp(input, "i") == 0) {
 			useItem(c, m);
 			return;
 		}
@@ -386,12 +515,12 @@ void actions(Character *c, Character *m) {
 			castSpell(c, m);
 			return;
 		}
-		/* wait(w): do nothing */	
+		/* wait(w): do nothing */
 		else if(strcasecmp(input, "wait") == 0 || strcasecmp(input, "w") == 0) {
 			wait(c);
 			return;
 		}
-		/* escape(exit): exits the program, maybe serve a practical purpose if adding ranged weapons/magic? */
+		/* escape(exit): exits the program */
 		/* shortcut is "exit" instead of "e" to avoid accidental exits */
 		else if(strcasecmp(input, "escape") == 0 || strcasecmp(input, "exit") == 0) {
 			escape(c, m);
@@ -413,11 +542,63 @@ void monsterAction(Character *m, Character *c) {
 	c->isTurn = true;
 }
 
-const unsigned LVL0_SAVE_CODE = 547283;
+/** Ask user to equip item, buffitem, or spell found.
+ *  Pass in player character, particular item that is found, and message.
+ *  Whether "Item" is a Spell, potion, or Item will be determined in the function.
+ *  If item, needs to go in itemSlot; if potion, needs to go in potionSlot, spells stored in knowSpell.
+ */
+void item_or_spell_found(Character *c, Item itemFound, char message[]) {
+	assert(c->isPlayerCharacter);
+	printf("%s\nIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
+	bool isYes;
+	switch(itemFound) { /* Never going to find nothing so skip 0 */
+		/* for spells, add to knowSpell */
+		case 1: case 2: case 3: case 4: case 5:
+			c->knowSpell[itemFound - 1] = true;
+			break;
+		/* for potions, offer to use item in inventory and take new item */
+		case 6: case 7: case 8:	case 9:	case 10:
+			printf("Add %s to potion inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
+			if(c->potionSlot == NOTHING) {
+				isYes = yes_or_no("\n");
+			} else {
+				printf("%s", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				isYes = yes_or_no(" will be used before being discarded.\n");
+			}
+			if(isYes) {
+				usePotion(c, false);
+				c->potionSlot = itemFound;
+				printf("%s is now in potion inventory\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+			} else {
+				printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+			}
+			break;
+		/* for items, offer to use item in inventory and take new item */
+		case 11: case 12: case 13: case 14: case 15:
+			printf("Add %s to item inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
+			if(c->itemSlot == NOTHING) {
+				isYes = yes_or_no("\n");
+			} else {
+				printf("%s", ITEM_AND_SPELL_NAMES[c->itemSlot]);
+				isYes = yes_or_no(" will be discarded.\n");
+			}
+			if(isYes) {
+				usePotion(c, false);
+				c->potionSlot = itemFound;
+			} else {
+				printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+			}
+			break;
+		default:
+			printf("It vanishes before your eyes. It must have been an illusion!\n");
+	}
+}
+
+//static const unsigned LVL0_SAVE_CODE = 547283;
 void lvl0(Character *player) {
 	Character *monster = newCharacter("appears!");
 	printf("Type help(h) for how to play\n");
-	do {
+	while(true) {
 		actions(player, monster);
 		if(monster->health <= 0) {
 			printf("VICTORY!\n");
@@ -430,10 +611,11 @@ void lvl0(Character *player) {
 			break;
 		}
 //		printf("state of isTurn: %d\n", player->isTurn);
-	} while(player->health > 0);
+	}
 	free(monster);
 }
-//@TODO implement a save file in the main function, and perhaps an option to start a new game instead of that
+//@TODO implement a save file in the main function, and perhaps an option to start a new game too
+//@TODO add option to save game each time a monster is defeated
 int main() {
 	Character *player = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
 	lvl0(player);
