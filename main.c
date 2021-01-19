@@ -10,22 +10,50 @@
 /*********** Constants ************/
 
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
-#define SPELLS_IN_GAME 5 /* Total # of spells that exist */
+#define SPELLS_IN_GAME 5
+#define MONSTERS_IN_GAME 6
 
-/* Player's starting stats */
 static const unsigned char STARTING_PLAYER_HEALTH = 5;
 static const unsigned char STARTING_PLAYER_MANA = 3;
 static const unsigned char STARTING_PLAYER_ATTACK = 2;
 static const unsigned char STARTING_PLAYER_DEFENSE = 1;
 
-/* Monster's stats, will assign different ones for each monster type in future */
 static const unsigned char MONSTER_HEALTH = 3;
 static const unsigned char MONSTER_MANA = 0;
 static const unsigned char MONSTER_ATTACK = 2;
 static const unsigned char MONSTER_DEFENSE = 0;
 static const char MONSTER_NAME[] = "The monster";
 
-/** Lists out items and spells */
+static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
+	"The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
+};
+
+/* Below goes in order: health, mana, attack, defense */
+static const int MONSTER_STATS[][MONSTERS_IN_GAME] = {
+	/* Beast */ 			3, 0, 2, 0,
+	/* Killer Plant */ 		4, 0, 2, 1, /* Almost 1 shot by fireball */
+	/* Wraith */ 			7, 2, 2, 1, /* Almost 1 shot by light vial */
+	/* Mad Wizard */ 		5, 5, 1, 0, /* Immune to magic */
+	/* Wizard's Golem */ 	10, 0, 3, 3, /* All physical damage so iron pellet good against him */
+	/* Vampire Lord */		9, 3, 4, 2
+};
+
+typedef enum ENEMY_TYPES {
+	BEAST,
+	KILLER_PLANT,
+	WRAITH,
+	MAD_WIZARD,
+	VAMPIRE_LORD
+} Enemy;
+
+typedef enum STATUS_EFFECTS { /* Many relate to spells/items below */
+	STUN,
+	POISON,
+	DRAINED,
+	DEFENSE_UP,
+	ATTACK_UP
+} Effect;
+
 typedef enum ITEMS_AND_SPELLS {
 	/* Nothing(0) is the default inventory and spell slot value */
 	NOTHING,
@@ -164,15 +192,17 @@ Character* newPlayerCharacter() {
 
 /** Creates a new non-player character */
 Character* newCharacter(char message[]) {
-	Character *c = malloc(sizeof(*c));
-	c->health = MONSTER_HEALTH;
-	c->mana = MONSTER_MANA;
-	c->attack = MONSTER_ATTACK;
-	c->defense = MONSTER_DEFENSE;
-	c->isPlayerCharacter = false;
-	strcpy(c->name, MONSTER_NAME);
-	printf("%s %s\n", c->name, message);
-	return c;
+	Character *m = malloc(sizeof(*m));
+	m->health = MONSTER_HEALTH;
+	m->totalHealth = MONSTER_HEALTH;
+	m->mana = MONSTER_MANA;
+	m->totalMana = MONSTER_MANA;
+	m->attack = MONSTER_ATTACK;
+	m->defense = MONSTER_DEFENSE;
+	m->isPlayerCharacter = false;
+	strcpy(m->name, MONSTER_NAME);
+	printf("%s %s\n", m->name, message);
+	return m;
 }
 
 /** Increases the stat of the player's choice, should be called whenever a monster is defeated */
@@ -231,9 +261,18 @@ void status(Character *c) {
 
 /** Output stats of enemy character */
 void enemyStatus(Character *m) {
+	static const char *MONSTER_DESCRIPTIONS[MONSTERS_IN_GAME] = {
+		"",
+		"",
+		"",
+		"",
+		"",
+		""
+	};
 	assert(!m->isPlayerCharacter);
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
 			m->name, m->health, m->totalHealth, m->mana, m->totalMana, m->attack, m->defense);
+	//printf("%s," ); //@TODO print out hints here
 }
 
 /** Output help info */
@@ -249,6 +288,24 @@ void help() {
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n"
 			"\n");
+	bool isYes = yes_or_no("Output additional game information?\n");
+	if(isYes) {
+		printf("Additional information:\n"
+				"\tHealth is life energy. When health reaches 0, death occurs.\n"
+				"\tMana is magic energy, which is expended to cast spells.\n"
+				"\tHealth and mana can only be restored using potions.\n"
+				"\tDamage dealt is attacker's attack value minus defender's defense value.\n"
+				"\t\tFor example, if a player with 3 attack attacks a monster with 1 defense, 2 damage is dealt.\n"
+				"\tSpells and items ignore defense.\n"
+				"\tPotions, items, and spells can be found after each battle.\n"
+				"\tItems and potions can only be used once, while spells can be used as long as there is enough mana to cast them.\n"
+				"\tCertain items, spells, and potions are very effective against certain enemies.\n"
+				"\tAt least 1 level up occurs after each battle; the game automatically saves when this occurs.\n"
+				//"\t\n"
+				"\n");
+	} else {
+		printf("Ok then.\n");
+	}
 }
 
 /***** Potion Functions *****/
@@ -332,7 +389,15 @@ void iron_pellet(Character *c) {
 }
 
 void demon_fire(Character *user, Character *c) {
-	//@TODO
+	/* spells and items ignore defense */ //@TODO tell user this at some point
+	printf("%s throws a %s at %s, making the room erupt in flames.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
+	sleep(1);
+	const char DEMON_FIRE_DAMAGE = 6;
+	c->health -= DEMON_FIRE_DAMAGE;
+	if(!user->isPlayerCharacter) {
+		user->itemSlot = NOTHING;
+	}
+	printf("%s takes %d damage!\n", c->name, DEMON_FIRE_DAMAGE);
 }
 
 void light_vial(Character *user, Character *c) {
@@ -369,7 +434,9 @@ void useItem(Character *c, Character *m) {
 
 /***** Spell Functions *****/
 void fireball(Character *caster, Character *c) {
-	//@TODO
+	printf("%s casts fireball!\n", caster->name);
+	const char FIREBALL_DAMAGE = 3;
+
 }
 void lightning_stake(Character *caster, Character *c) {
 	//@TODO
