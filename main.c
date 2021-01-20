@@ -11,25 +11,16 @@
 
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5
-#define MONSTERS_IN_GAME 6
+#define MONSTERS_IN_GAME 7 /* Includes player character */
 
 static const unsigned char STARTING_PLAYER_HEALTH = 5;
 static const unsigned char STARTING_PLAYER_MANA = 3;
 static const unsigned char STARTING_PLAYER_ATTACK = 2;
 static const unsigned char STARTING_PLAYER_DEFENSE = 1;
 
-static const unsigned char MONSTER_HEALTH = 3;
-static const unsigned char MONSTER_MANA = 0;
-static const unsigned char MONSTER_ATTACK = 2;
-static const unsigned char MONSTER_DEFENSE = 0;
-static const char MONSTER_NAME[] = "The monster";
-
-static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
-	"The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
-};
-
 /* Below goes in order: health, mana, attack, defense */
-static const int MONSTER_STATS[][MONSTERS_IN_GAME] = {
+static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
+	/* Player Character */	5, 3, 2, 1,
 	/* Beast */ 			3, 0, 2, 0,
 	/* Killer Plant */ 		4, 0, 2, 1, /* Almost 1 shot by fireball */
 	/* Wraith */ 			7, 2, 2, 1, /* Almost 1 shot by light vial */
@@ -38,8 +29,16 @@ static const int MONSTER_STATS[][MONSTERS_IN_GAME] = {
 	/* Vampire Lord */		9, 3, 4, 2
 };
 
+/* To make accessing above array less annoying */
+typedef enum STATS {
+	HEALTH,
+	MANA,
+	ATTACK,
+	DEFENSE
+};
+
 typedef enum ENEMY_TYPES {
-	BEAST,
+	BEAST = 1,
 	KILLER_PLANT,
 	WRAITH,
 	MAD_WIZARD,
@@ -84,6 +83,7 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* PotionItems */
 	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul" /* Items */
 };
+
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"Nothing in this slot.\nFind powerful items and potions in the mansion.\n",
 
@@ -152,7 +152,7 @@ typedef struct Characters {
 	unsigned char mana; /* Negative mana not allowed, if not enough mana cannot cast a spell */
 	unsigned char attack;
 	unsigned char defense; /* no negative defense, total_damage = attacker's_attack - defender's_defense */
-	bool isPlayerCharacter;
+	char isMonster; /* 0 == is the player character, any other value corresponds to enemy enum */
 	bool isTurn;
 	char name[MAX_INPUT_LENGTH];
 } Character;
@@ -169,7 +169,7 @@ Character* newPlayerCharacter() {
 	c->mana = STARTING_PLAYER_MANA;
 	c->attack = STARTING_PLAYER_ATTACK;
 	c->defense = STARTING_PLAYER_DEFENSE;
-	c->isPlayerCharacter = true;
+	c->isMonster = 0;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
 	getInput(c->name, "Enter your traveler's name: ");
 	
@@ -191,23 +191,33 @@ Character* newPlayerCharacter() {
 }
 
 /** Creates a new non-player character */
-Character* newCharacter(char message[]) {
+Character* newCharacter(char message[], Enemy enemy) {
+	assert(enemy);
+	static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
+		"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
+	};
 	Character *m = malloc(sizeof(*m));
-	m->health = MONSTER_HEALTH;
-	m->totalHealth = MONSTER_HEALTH;
-	m->mana = MONSTER_MANA;
-	m->totalMana = MONSTER_MANA;
-	m->attack = MONSTER_ATTACK;
-	m->defense = MONSTER_DEFENSE;
-	m->isPlayerCharacter = false;
-	strcpy(m->name, MONSTER_NAME);
+//	m->health = MONSTER_STATS[HEALTH][enemy];
+//	m->totalHealth = MONSTER_STATS[HEALTH][enemy];
+//	m->mana = MONSTER_STATS[MANA][enemy];
+//	m->totalMana = MONSTER_STATS[MANA][enemy];
+//	m->attack = MONSTER_STATS[ATTACK][enemy];
+//	m->defense = MONSTER_STATS[DEFENSE][enemy];
+	m->health = MONSTER_STATS[enemy][HEALTH];
+	m->totalHealth = MONSTER_STATS[enemy][HEALTH];
+	m->mana = MONSTER_STATS[enemy][MANA];
+	m->totalMana = MONSTER_STATS[enemy][MANA];
+	m->attack = MONSTER_STATS[enemy][ATTACK];
+	m->defense = MONSTER_STATS[enemy][DEFENSE];
+	m->isMonster = enemy;
+	strcpy(m->name, MONSTER_NAMES[enemy]);
 	printf("%s %s\n", m->name, message);
 	return m;
 }
 
 /** Increases the stat of the player's choice, should be called whenever a monster is defeated */
 void lvlUp(Character *c) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	printf("Level up avaliable!\nLevel health(h), mana(m), attack(a), or defense(d)?\n");
 	char input[MAX_INPUT_LENGTH];
 	while(true) {
@@ -249,12 +259,12 @@ void meleeAttack(Character *attacker, Character *c) {
 	} else {
 		printf("%s took no damage!\n\n", c->name);
 	}
-	if(attacker->isPlayerCharacter) attacker->isTurn = false;
+	if(!attacker->isMonster) attacker->isTurn = false;
 }
 
 /** Output stats of player character */
 void status(Character *c) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
 			c->name, c->health, c->totalHealth, c->mana, c->totalMana, c->attack, c->defense);
 }
@@ -269,10 +279,10 @@ void enemyStatus(Character *m) {
 		"",
 		""
 	};
-	assert(!m->isPlayerCharacter);
+	assert(m->isMonster);
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
 			m->name, m->health, m->totalHealth, m->mana, m->totalMana, m->attack, m->defense);
-	//printf("%s," ); //@TODO print out hints here
+	//printf("%s," ); //@TODO print out hints/descriptions here
 }
 
 /** Output help info */
@@ -352,7 +362,7 @@ void panacea(Character *c) {
 
 /** Use potion in potionSlot */
 void usePotion(Character *c, bool isInCombat) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	switch(c->potionSlot) {
 		case RED_POTION:
 			red_potion(c, false);
@@ -394,7 +404,7 @@ void demon_fire(Character *user, Character *c) {
 	sleep(1);
 	const char DEMON_FIRE_DAMAGE = 6;
 	c->health -= DEMON_FIRE_DAMAGE;
-	if(!user->isPlayerCharacter) {
+	if(user->isMonster) {
 		user->itemSlot = NOTHING;
 	}
 	printf("%s takes %d damage!\n", c->name, DEMON_FIRE_DAMAGE);
@@ -410,7 +420,7 @@ void horn(Character *user, Character *c) {
 
 /** Use item in itemSlot */
 void useItem(Character *c, Character *m) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	switch(c->itemSlot) {
 		case TEARS:
 			tears(c);
@@ -453,7 +463,7 @@ void frost_resonance(Character *caster, Character *c) {
 
 /** Cast */
 void castSpell(Character *c, Character *m) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
 	for(int i = 0; i < SPELLS_IN_GAME; i++) {
@@ -528,14 +538,14 @@ void castSpell(Character *c, Character *m) {
 
 /** wait, expends player turn */
 void wait(Character *c) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	printf("%s does nothing.\n\n", c->name);
 	c->isTurn = false;
 }
 
 /** Exit */
 void escape(Character *c, Character *m) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	printf("%s runs out of the mansion in shame.\n\n", c->name);
 	free(c); free(m);
 	exit(0);
@@ -544,7 +554,7 @@ void escape(Character *c, Character *m) {
 
 /** Call when input is required, c must be the player character, m the monster */
 void actions(Character *c, Character *m) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	unsigned char input[MAX_INPUT_LENGTH];
 	while(true) {
 		getInput(input, ">> ");
@@ -615,7 +625,7 @@ void monsterAction(Character *m, Character *c) {
  *  If item, needs to go in itemSlot; if potion, needs to go in potionSlot, spells stored in knowSpell.
  */
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
-	assert(c->isPlayerCharacter);
+	assert(!c->isMonster);
 	printf("%s\nIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
 	switch(itemFound) { /* Never going to find nothing so skip 0 */
@@ -663,7 +673,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 
 //static const unsigned LVL0_SAVE_CODE = 547283;
 void lvl0(Character *player) {
-	Character *monster = newCharacter("appears!");
+	Character *monster = newCharacter("appears!", BEAST);
 	printf("Type help(h) for how to play\n");
 	while(true) {
 		actions(player, monster);
