@@ -13,11 +13,6 @@
 #define SPELLS_IN_GAME 5
 #define MONSTERS_IN_GAME 7 /* Includes player character */
 
-static const unsigned char STARTING_PLAYER_HEALTH = 5;
-static const unsigned char STARTING_PLAYER_MANA = 3;
-static const unsigned char STARTING_PLAYER_ATTACK = 2;
-static const unsigned char STARTING_PLAYER_DEFENSE = 1;
-
 /* Below goes in order: health, mana, attack, defense */
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Player Character */	5, 3, 2, 1,
@@ -35,7 +30,7 @@ typedef enum STATS {
 	MANA,
 	ATTACK,
 	DEFENSE
-};
+} Stat;
 
 typedef enum ENEMY_TYPES {
 	BEAST = 1,
@@ -160,15 +155,15 @@ typedef struct Characters {
 /** Creates a new player character, should only be called once until multiplayer is added */
 Character* newPlayerCharacter() {
 	Character *c = malloc(sizeof(*c));
-	c->totalHealth = STARTING_PLAYER_HEALTH;
-	c->totalMana = STARTING_PLAYER_MANA;
+	c->totalHealth = MONSTER_STATS[0][HEALTH];
+	c->totalMana = MONSTER_STATS[0][MANA];
 	c->itemSlot = NOTHING;
 	c->potionSlot = NOTHING;
 
-	c->health = STARTING_PLAYER_HEALTH;
-	c->mana = STARTING_PLAYER_MANA;
-	c->attack = STARTING_PLAYER_ATTACK;
-	c->defense = STARTING_PLAYER_DEFENSE;
+	c->health = MONSTER_STATS[0][HEALTH];
+	c->mana = MONSTER_STATS[0][MANA];
+	c->attack = MONSTER_STATS[0][ATTACK];
+	c->defense = MONSTER_STATS[0][DEFENSE];
 	c->isMonster = 0;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
 	getInput(c->name, "Enter your traveler's name: ");
@@ -197,12 +192,6 @@ Character* newCharacter(char message[], Enemy enemy) {
 		"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
 	};
 	Character *m = malloc(sizeof(*m));
-//	m->health = MONSTER_STATS[HEALTH][enemy];
-//	m->totalHealth = MONSTER_STATS[HEALTH][enemy];
-//	m->mana = MONSTER_STATS[MANA][enemy];
-//	m->totalMana = MONSTER_STATS[MANA][enemy];
-//	m->attack = MONSTER_STATS[ATTACK][enemy];
-//	m->defense = MONSTER_STATS[DEFENSE][enemy];
 	m->health = MONSTER_STATS[enemy][HEALTH];
 	m->totalHealth = MONSTER_STATS[enemy][HEALTH];
 	m->mana = MONSTER_STATS[enemy][MANA];
