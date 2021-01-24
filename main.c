@@ -33,7 +33,7 @@ typedef enum STATS {
 } Stat;
 
 typedef enum ENEMY_TYPES {
-	BEAST = 1,
+	BEAST = 1, /* Skips player character */
 	KILLER_PLANT,
 	WRAITH,
 	MAD_WIZARD,
@@ -123,9 +123,9 @@ void enterToContinue(char message[]) {
  */
 bool yes_or_no(char message[]) {
 	char input[MAX_INPUT_LENGTH];
-	printf("%sYes(y) or No(n)?\n", message); /* assumes message will end with \n */
+	printf("%s", message); /* assumes message will end with \n */
 	while(true) {
-		getInput(input, ">> ");
+		getInput(input, "Yes(y) or No(n): ");
 		if(strcasecmp(input, "yes") == 0 || strcasecmp(input, "y") == 0) {
 			return true;
 		} else if(strcasecmp(input, "no") == 0 || strcasecmp(input, "n") == 0) {
@@ -179,16 +179,16 @@ Character* newPlayerCharacter() {
 	if(isYes) {
 		printf("The doors creak open. %s enters the mansion.\n", c->name);
 	} else {
-		printf("Intimidated by the mansion, %s goes back home\n", c->name);
+		printf("Intimidated by the mansion, %s turns around and heads home.\n", c->name);
 		free(c); exit(0);
 	}
 	return c;
 }
 
 /** Creates a new non-player character */
-Character* newCharacter(char message[], Enemy enemy) {
+Character* newCharacter(char message[], Enemy enemy) { //@TODO get rid of message, have all messages in this function in an array
 	assert(enemy);
-	static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
+	const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
 		"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
 	};
 	Character *m = malloc(sizeof(*m));
@@ -244,9 +244,9 @@ void meleeAttack(Character *attacker, Character *c) {
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
-		printf("%s took %u damage!\n\n", c->name, effectiveDamage);
+		printf("%s took %u damage!\n", c->name, effectiveDamage);
 	} else {
-		printf("%s took no damage!\n\n", c->name);
+		printf("%s took no damage!\n", c->name);
 	}
 	if(!attacker->isMonster) attacker->isTurn = false;
 }
@@ -254,7 +254,7 @@ void meleeAttack(Character *attacker, Character *c) {
 /** Output stats of player character */
 void status(Character *c) {
 	assert(!c->isMonster);
-	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
+	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n",
 			c->name, c->health, c->totalHealth, c->mana, c->totalMana, c->attack, c->defense);
 }
 
@@ -269,7 +269,7 @@ void enemyStatus(Character *m) {
 		""
 	};
 	assert(m->isMonster);
-	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n\n",
+	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n",
 			m->name, m->health, m->totalHealth, m->mana, m->totalMana, m->attack, m->defense);
 	//printf("%s," ); //@TODO print out hints/descriptions here
 }
@@ -278,8 +278,8 @@ void enemyStatus(Character *m) {
 void help() {
 	printf("Goal: defeat your foes and stay alive, reach the fourth floor:\n"
 			"\thelp(h)\t\tlists possible commands\n"
-			"\tstatus(s)\tlists out player stats, i.e: health\n"
-			"\tenemy(e)\tlists out enemy's stats, i.e: attack\n"
+			"\tstatus(s)\tlists out player stats\n"
+			"\tenemy(e)\tlists out enemy's stats\n"
 			"\tattack(a)\tattack enemy, ending turn\n"
 			"\tpotion(p)\tdrink potion, ending turn\n"
 			"\titem(i)\t\tuse item, ending turn\n"
@@ -287,6 +287,7 @@ void help() {
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n"
 			"\n");
+	sleep(1);
 	bool isYes = yes_or_no("Output additional game information?\n");
 	if(isYes) {
 		printf("Additional information:\n"
@@ -294,14 +295,13 @@ void help() {
 				"\tMana is magic energy, which is expended to cast spells.\n"
 				"\tHealth and mana can only be restored using potions.\n"
 				"\tDamage dealt is attacker's attack value minus defender's defense value.\n"
-				"\t\tFor example, if a player with 3 attack attacks a monster with 1 defense, 2 damage is dealt.\n"
+				"\tIf a player with 3 attack attacks a monster with 1 defense, 2 damage is dealt.\n"
 				"\tSpells and items ignore defense.\n"
 				"\tPotions, items, and spells can be found after each battle.\n"
 				"\tItems and potions can only be used once, while spells can be used as long as there is enough mana to cast them.\n"
 				"\tCertain items, spells, and potions are very effective against certain enemies.\n"
-				"\tAt least 1 level up occurs after each battle; the game automatically saves when this occurs.\n"
+				"\tAt least 1 level up occurs after each battle; the game automatically saves when this occurs.\n");
 				//"\t\n"
-				"\n");
 	} else {
 		printf("Ok then.\n");
 	}
@@ -353,6 +353,9 @@ void panacea(Character *c) {
 void usePotion(Character *c, bool isInCombat) {
 	assert(!c->isMonster);
 	switch(c->potionSlot) {
+		case NOTHING:
+			printf("There is no potion in inventory!\n");
+			return; // Don't end turn here
 		case RED_POTION:
 			red_potion(c, false);
 			break;
@@ -388,7 +391,6 @@ void iron_pellet(Character *c) {
 }
 
 void demon_fire(Character *user, Character *c) {
-	/* spells and items ignore defense */ //@TODO tell user this at some point
 	printf("%s throws a %s at %s, making the room erupt in flames.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
 	sleep(1);
 	const char DEMON_FIRE_DAMAGE = 6;
@@ -400,17 +402,22 @@ void demon_fire(Character *user, Character *c) {
 }
 
 void light_vial(Character *user, Character *c) {
-	//@TODO note that this will probably only be useable by player
+	assert(!user->isMonster);
+	printf("%s throws a %s at %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name, c->name);
+	
 }
 
 void horn(Character *user, Character *c) {
-	//@TODO note that this will probably only be useable by player
+	assert(!user->isMonster);
 }
 
 /** Use item in itemSlot */
 void useItem(Character *c, Character *m) {
 	assert(!c->isMonster);
 	switch(c->itemSlot) {
+		case NOTHING:
+			printf("There is no item in inventory!\n");
+			return; // Don't end turn here
 		case TEARS:
 			tears(c);
 			break;
@@ -418,10 +425,13 @@ void useItem(Character *c, Character *m) {
 			iron_pellet(c);
 			break;
 		case DEMON_FIRE:
+			demon_fire(c, m);
 			break;
 		case LIGHT_VIAL:
+			light_vial(c, m);
 			break;
 		case HORN_OF_SAUL:
+			horn(c, m);
 			break;
 		default:
 			printf("The item had no effect. Must have been a dud!\n");
@@ -515,7 +525,7 @@ void castSpell(Character *c, Character *m) {
 				frost_resonance(c, m);
 				break;
 			} else {
-				printf("Invalid input\n");
+				printf("Invalid input.\n");
 			}
 		}
 	} else {
@@ -528,14 +538,14 @@ void castSpell(Character *c, Character *m) {
 /** wait, expends player turn */
 void wait(Character *c) {
 	assert(!c->isMonster);
-	printf("%s does nothing.\n\n", c->name);
+	printf("%s does nothing.\n", c->name);
 	c->isTurn = false;
 }
 
 /** Exit */
 void escape(Character *c, Character *m) {
 	assert(!c->isMonster);
-	printf("%s runs out of the mansion in shame.\n\n", c->name);
+	printf("%s runs out of the mansion in shame.\n", c->name);
 	free(c); free(m);
 	exit(0);
 }
@@ -547,7 +557,7 @@ void actions(Character *c, Character *m) {
 	unsigned char input[MAX_INPUT_LENGTH];
 	while(true) {
 		getInput(input, ">> ");
-		/* help(h): lists out possible commands and a little how to play */
+		/* help(h): lists out possible commands and then asks if user wants more in depth information */
 		if(strcasecmp(input, "help") == 0 || strcasecmp(input, "h") == 0) {
 			help();
 			return;
@@ -594,7 +604,7 @@ void actions(Character *c, Character *m) {
 		}
 		/* ask user for input again if the last input was invalid */
 		else {
-			printf("Invalid input, type help(h) for possible commands\n");
+			printf("Invalid input, type help(h) for possible commands.\n");
 		}
 	} 
 }
