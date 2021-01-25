@@ -4,8 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
-/* wait() from unistd.h and strcasecmp() from string.h are non-portable for other OSes */
+//#include <unistd.h>
+#include <windows.h>
+/* sleep() from unistd.h and _stricmp() from string.h are non-portable for other OSes */
+
+//#ifdef _WINDOWS
+//#include <windows.h>
+//#define _stricmp _stricmp
+//#define sleep Sleep
+//#else
+//#include <unistd.h>
+//#endif
 
 /*********** Constants ************/
 
@@ -126,9 +135,9 @@ bool yes_or_no(char message[]) {
 	printf("%s", message); /* assumes message will end with \n */
 	while(true) {
 		getInput(input, "Yes(y) or No(n): ");
-		if(strcasecmp(input, "yes") == 0 || strcasecmp(input, "y") == 0) {
+		if(_stricmp(input, "yes") == 0 || _stricmp(input, "y") == 0) {
 			return true;
-		} else if(strcasecmp(input, "no") == 0 || strcasecmp(input, "n") == 0) {
+		} else if(_stricmp(input, "no") == 0 || _stricmp(input, "n") == 0) {
 			return false;
 		} else {
 			printf("Invalid input.\n");
@@ -211,19 +220,19 @@ void lvlUp(Character *c) {
 	char input[MAX_INPUT_LENGTH];
 	while(true) {
 		getInput(input, ">> ");
-		if(strcasecmp(input, "health") == 0 || strcasecmp(input, "h") == 0) {
+		if(_stricmp(input, "health") == 0 || _stricmp(input, "h") == 0) {
 			c->totalHealth++; c->health++;
 			printf("%s feels healthier.\n\n", c->name);
 			return;
-		} else if(strcasecmp(input, "mana") == 0 || strcasecmp(input, "m") == 0) {
+		} else if(_stricmp(input, "mana") == 0 || _stricmp(input, "m") == 0) {
 			c->totalMana++; c->mana++;
 			printf("%s feels more intelligent.\n\n", c->name);
 			return;
-		} else if(strcasecmp(input, "attack") == 0 || strcasecmp(input, "a") == 0) {
+		} else if(_stricmp(input, "attack") == 0 || _stricmp(input, "a") == 0) {
 			c->attack++;
 			printf("%s feels more powerful.\n\n", c->name);
 			return;
-		} else if(strcasecmp(input, "defense") == 0 || strcasecmp(input, "d") == 0) {
+		} else if(_stricmp(input, "defense") == 0 || _stricmp(input, "d") == 0) {
 			c->defense++;
 			printf("%s feels stronger.\n\n", c->name);
 			return;
@@ -240,7 +249,7 @@ void lvlUp(Character *c) {
  */
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
-	sleep(1);
+	Sleep(1000);
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
@@ -287,7 +296,7 @@ void help() {
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n"
 			"\n");
-	sleep(1);
+	Sleep(1000);
 	bool isYes = yes_or_no("Output additional game information?\n");
 	if(isYes) {
 		printf("Additional information:\n"
@@ -316,7 +325,7 @@ void red_potion(Character *c, bool isGreater) {
 		healVal = 3;
 	}
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	sleep(1);
+	Sleep(1000);
 	if(c->health + healVal >= c->totalHealth) {
 		c->health = c->totalHealth;
 		printf("%s is now full health.\n", c->name);
@@ -334,7 +343,7 @@ void blue_potion(Character *c, bool isGreater) {
 		manaVal = 3;
 	}
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	sleep(1);
+	Sleep(1000);
 	if(c->mana + manaVal >= c->totalMana) {
 		c->mana = c->totalMana;
 		printf("%s is now full mana.\n", c->name);
@@ -392,7 +401,7 @@ void iron_pellet(Character *c) {
 
 void demon_fire(Character *user, Character *c) {
 	printf("%s throws a %s at %s, making the room erupt in flames.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
-	sleep(1);
+	Sleep(1000);
 	const char DEMON_FIRE_DAMAGE = 6;
 	c->health -= DEMON_FIRE_DAMAGE;
 	if(user->isMonster) {
@@ -509,19 +518,19 @@ void castSpell(Character *c, Character *m) {
 		char input[MAX_INPUT_LENGTH];
 		while(true) {
 			getInput(input, ">> ");
-			if(c->knowSpell[0] && (strcasecmp(input, "Fireball") == 0 || strcasecmp(input, "f") == 0)) {
+			if(c->knowSpell[0] && (_stricmp(input, "Fireball") == 0 || _stricmp(input, "f") == 0)) {
 				fireball(c, m);
 				break;
-			} else if(c->knowSpell[1] && (strcasecmp(input, "Lightning Stake") == 0 || strcasecmp(input, "L") == 0)) {
+			} else if(c->knowSpell[1] && (_stricmp(input, "Lightning Stake") == 0 || _stricmp(input, "L") == 0)) {
 				lightning_stake(c, m);
 				break;
-			} else if(c->knowSpell[2] && (strcasecmp(input, "Summon Sheep") == 0 || strcasecmp(input, "s") == 0)) {
+			} else if(c->knowSpell[2] && (_stricmp(input, "Summon Sheep") == 0 || _stricmp(input, "s") == 0)) {
 				summon_sheep(c, m);
 				break;
-			} else if(c->knowSpell[3] && (strcasecmp(input, "Sacrificial Brand") == 0 || strcasecmp(input, "b") == 0)) {
+			} else if(c->knowSpell[3] && (_stricmp(input, "Sacrificial Brand") == 0 || _stricmp(input, "b") == 0)) {
 				sacrificial_brand(c, m);
 				break;
-			} else if(c->knowSpell[4] && (strcasecmp(input, "Frost Resonance") == 0 || strcasecmp(input, "r") == 0)) {
+			} else if(c->knowSpell[4] && (_stricmp(input, "Frost Resonance") == 0 || _stricmp(input, "r") == 0)) {
 				frost_resonance(c, m);
 				break;
 			} else {
@@ -530,7 +539,7 @@ void castSpell(Character *c, Character *m) {
 		}
 	} else {
 		printf("%s tries to cast magic, but doesn't know how. %s chuckles.\n", c->name, m->name);
-		sleep(1);
+		Sleep(1000);
 	}
 	c->isTurn = false;
 }
@@ -554,51 +563,51 @@ void escape(Character *c, Character *m) {
 /** Call when input is required, c must be the player character, m the monster */
 void actions(Character *c, Character *m) {
 	assert(!c->isMonster);
-	unsigned char input[MAX_INPUT_LENGTH];
+	char input[MAX_INPUT_LENGTH];
 	while(true) {
 		getInput(input, ">> ");
 		/* help(h): lists out possible commands and then asks if user wants more in depth information */
-		if(strcasecmp(input, "help") == 0 || strcasecmp(input, "h") == 0) {
+		if(_stricmp(input, "help") == 0 || _stricmp(input, "h") == 0) {
 			help();
 			return;
 		}
 		/* status(s): outputs current player status */
-		if(strcasecmp(input, "status") == 0 || strcasecmp(input, "s") == 0) {
+		if(_stricmp(input, "status") == 0 || _stricmp(input, "s") == 0) {
 			status(c);
 			return;
 		}
 		/* enemy(e): outputs non-player-character's status, and //@TODO a hint to help fight him */
-		if(strcasecmp(input, "enemy") == 0 || strcasecmp(input, "e") == 0) {
+		if(_stricmp(input, "enemy") == 0 || _stricmp(input, "e") == 0) {
 			enemyStatus(m);
 			return;
 		}
 		/* attack(a): calls meleeAttack */
-		else if(strcasecmp(input, "attack") == 0 || strcasecmp(input, "a") == 0) {
+		else if(_stricmp(input, "attack") == 0 || _stricmp(input, "a") == 0) {
 			meleeAttack(c, m);
 			return;
 		}
 		/* potion(p): use potion item currently in player's potionSlot */
-		else if(strcasecmp(input, "potion") == 0 || strcasecmp(input, "p") == 0) {
+		else if(_stricmp(input, "potion") == 0 || _stricmp(input, "p") == 0) {
 			usePotion(c, true);
 		}
 		/* item(i): use item currently in player's itemSlot */
-		else if(strcasecmp(input, "item") == 0 || strcasecmp(input, "i") == 0) {
+		else if(_stricmp(input, "item") == 0 || _stricmp(input, "i") == 0) {
 			useItem(c, m);
 			return;
 		}
 		/* cast(c): cast whatever magic is in player's magic slot */
-		else if(strcasecmp(input, "cast") == 0 || strcasecmp(input, "c") == 0) {
+		else if(_stricmp(input, "cast") == 0 || _stricmp(input, "c") == 0) {
 			castSpell(c, m);
 			return;
 		}
 		/* wait(w): do nothing */
-		else if(strcasecmp(input, "wait") == 0 || strcasecmp(input, "w") == 0) {
+		else if(_stricmp(input, "wait") == 0 || _stricmp(input, "w") == 0) {
 			wait(c);
 			return;
 		}
 		/* escape(exit): exits the program */
 		/* shortcut is "exit" instead of "e" to avoid accidental exits */
-		else if(strcasecmp(input, "escape") == 0 || strcasecmp(input, "exit") == 0) {
+		else if(_stricmp(input, "escape") == 0 || _stricmp(input, "exit") == 0) {
 			escape(c, m);
 			exit(0);
 		}
@@ -612,7 +621,7 @@ void actions(Character *c, Character *m) {
 /** When not the players turn, the monster does something: as of right now, it will always attack */
 void monsterAction(Character *m, Character *c) {
 	if(!c->isTurn) {
-		sleep(1);
+		Sleep(1000);
 		meleeAttack(m, c);
 	}
 	c->isTurn = true;

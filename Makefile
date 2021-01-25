@@ -1,6 +1,6 @@
 PROJECT = four-floors
 
-CC = gcc
+CC = clang
 
 $(PROJECT):	main.o
 	$(CC) main.o -o $@
