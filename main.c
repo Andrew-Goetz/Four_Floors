@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy, I want it for linux compatibility in future */
 #include <assert.h>
 #include <stdbool.h> 
 #include <stdio.h>
@@ -15,7 +16,6 @@
 //#else
 //#include <unistd.h>
 //#endif
-
 /*********** Constants ************/
 
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
@@ -25,8 +25,8 @@
 /* Below goes in order: health, mana, attack, defense */
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Player Character */	5, 3, 2, 1,
-	/* Beast */ 			3, 0, 2, 0,
-	/* Killer Plant */ 		4, 0, 2, 1, /* Almost 1 shot by fireball */
+	/* Beast */ 			5, 0, 2, 0,
+	/* Killer Plant */ 		6, 0, 2, 1, /* Almost 1 shot by fireball */
 	/* Wraith */ 			7, 2, 2, 1, /* Almost 1 shot by light vial */
 	/* Mad Wizard */ 		5, 5, 1, 0, /* Immune to magic */
 	/* Wizard's Golem */ 	10, 0, 3, 3, /* All physical damage so iron pellet good against him */
@@ -42,7 +42,8 @@ typedef enum STATS {
 } Stat;
 
 typedef enum ENEMY_TYPES {
-	BEAST = 1, /* Skips player character */
+	PLAYER,
+	BEAST,
 	KILLER_PLANT,
 	WRAITH,
 	MAD_WIZARD,
@@ -120,11 +121,12 @@ void getInput(char input[], char message[]) {
 	}
 }
 
-/** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c */
-void enterToContinue(char message[]) {
-	printf("%s", message);
+/** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
+ *  Also important: don't use \n at end of printf when pressEnter() is called immediately after.
+ */
+void pressEnter() {
+	//printf("%s", message);
 	while(getchar() != '\n');
-	printf("\n");
 }
 
 /** Ask simple yes or no questions to user.
@@ -176,26 +178,15 @@ Character* newPlayerCharacter() {
 	c->isMonster = 0;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
 	getInput(c->name, "Enter your traveler's name: ");
-	
-	//@TODO move following text into main function or level functions
-	printf("%s has %u health.\n", c->name, c->health);
-	printf("%s has %u attack power.\n", c->name, c->attack);
+	printf("\n");
+	//printf("%s has %u health.\n", c->name, c->health);
+	//printf("%s has %u attack power.\n", c->name, c->attack);
 
-	printf("%s approaches the mansion.\n", c->name);
-	printf("What might lie on the fourth floor?\n");
-//	enterToContinue("Press enter to enter the mansion:");
-	bool isYes = yes_or_no("Enter the mansion?\n");
-	if(isYes) {
-		printf("The doors creak open. %s enters the mansion.\n", c->name);
-	} else {
-		printf("Intimidated by the mansion, %s turns around and heads home.\n", c->name);
-		free(c); exit(0);
-	}
 	return c;
 }
 
 /** Creates a new non-player character */
-Character* newCharacter(char message[], Enemy enemy) { //@TODO get rid of message, have all messages in this function in an array
+Character* newCharacter(char message[], Enemy enemy) {
 	assert(enemy);
 	const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
 		"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
@@ -209,7 +200,7 @@ Character* newCharacter(char message[], Enemy enemy) { //@TODO get rid of messag
 	m->defense = MONSTER_STATS[enemy][DEFENSE];
 	m->isMonster = enemy;
 	strcpy(m->name, MONSTER_NAMES[enemy]);
-	printf("%s %s\n", m->name, message);
+	printf("%s%s\n", m->name, message); /* message needs to start with a space character */
 	return m;
 }
 
@@ -249,7 +240,7 @@ void lvlUp(Character *c) {
  */
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
-	Sleep(1000);
+	Sleep(750);
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
@@ -621,7 +612,7 @@ void actions(Character *c, Character *m) {
 /** When not the players turn, the monster does something: as of right now, it will always attack */
 void monsterAction(Character *m, Character *c) {
 	if(!c->isTurn) {
-		Sleep(1000);
+		Sleep(750);
 		meleeAttack(m, c);
 	}
 	c->isTurn = true;
@@ -678,33 +669,56 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			printf("It vanishes before your eyes. It must have been an illusion!\n");
 	}
 }
+/** Function called once each level when combat is in progress.
+ *  c is the player character, m is the monster, and levelUpNumber is the 
+ *	number of times the lvlUp will be called when m is defeated.
+ */
 
-//static const unsigned LVL0_SAVE_CODE = 547283;
-void lvl0(Character *player) {
-	Character *monster = newCharacter("appears!", BEAST);
-	printf("Type help(h) for how to play\n");
+void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	while(true) {
-		actions(player, monster);
-		if(monster->health <= 0) {
+		actions(c, m);
+		if(m->health <= 0) {
 			printf("VICTORY!\n");
-			lvlUp(player);
+			for(; levelUpNumber != 0; levelUpNumber--) {
+				lvlUp(c);
+			}
 			break;
 		}
-		monsterAction(monster, player);
-		if(player->health <= 0) {
-			printf("You have been defeated!\n");
+		monsterAction(m, c);
+		if(c->health <= 0) {
+			printf("%s has been defeated!\n", c->name);
 			break;
 		}
 //		printf("state of isTurn: %d\n", player->isTurn);
 	}
-	free(monster);
+
+}
+
+void lvl0(Character *c) {
+	printf("Press enter to advance through dialogue."); pressEnter();
+	printf("A forest of trees disperse into a clearing; in it lies a massive, four-floor mansion."); pressEnter();
+	printf("%s wonders: what might lie on the fourth floor?", c->name); pressEnter();
+	printf("%s reaches the massive front doors of the mansion.\n", c->name);
+	bool isYes = yes_or_no("Enter the mansion, beginning a perilous journey?\n");
+	if(!isYes) {
+		printf("Intimidated by the mansion, %s turns around and heads home. Maybe it's for the best.\n", c->name);
+		free(c); exit(0);
+	}
+	printf("The doors creak open. %s enters the mansion.", c->name); pressEnter();
+	printf("Light streams into the mansion, revealing the dust floating in the air."); pressEnter();
+	printf("SLAM! The door closes behind %s!", c->name); pressEnter();
+	printf("%s turns and hears unnatural growls.", c->name); pressEnter();
+	Character *m = newCharacter(" appears!", BEAST);
+	printf("Type help(h) for how to fight!\n");
+	combat_sequence(c, m, 1);
+	free(m);
 }
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 //@TODO add option to save game each time a monster is defeated
 int main() {
-	Character *player = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
-	lvl0(player);
-	status(player);
-	free(player);
+	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
+	lvl0(c);
+	//status(c);
+	free(c);
 	return 0;
 }
