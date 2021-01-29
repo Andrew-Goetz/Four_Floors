@@ -21,6 +21,7 @@
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5
 #define MONSTERS_IN_GAME 7 /* Includes player character */
+#define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever Sleep is called */
 
 /* Below goes in order: health, mana, attack, defense */
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
@@ -29,8 +30,12 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Killer Plant */ 		6, 0, 2, 1, /* Almost 1 shot by fireball */
 	/* Wraith */ 			7, 2, 2, 1, /* Almost 1 shot by light vial */
 	/* Mad Wizard */ 		5, 5, 1, 0, /* Immune to magic */
-	/* Wizard's Golem */ 	10, 0, 3, 3, /* All physical damage so iron pellet good against him */
+	/* Wizard's Golem */ 	10, 0, 4, 3, /* All physical damage so iron pellet good against him */
 	/* Vampire Lord */		9, 3, 4, 2
+};
+
+static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
+	"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
 };
 
 /* To make accessing above array less annoying */
@@ -47,10 +52,12 @@ typedef enum ENEMY_TYPES {
 	KILLER_PLANT,
 	WRAITH,
 	MAD_WIZARD,
+	GOLEM,
 	VAMPIRE_LORD
 } Enemy;
 
 typedef enum STATUS_EFFECTS { /* Many relate to spells/items below */
+	NONE, /* default status effect */
 	STUN,
 	POISON,
 	DRAINED,
@@ -88,9 +95,9 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* PotionItems */
 	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul" /* Items */
 };
-
+//@TODO fix issue with description output for potions, greater red potion gives description for blue potion
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
-	"Nothing in this slot.\nFind powerful items and potions in the mansion.\n",
+	"Find powerful items and potions in the mansion.\n",
 
 	"The magic of the southern deserts. It radiates blue with magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
 	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.\n",
@@ -153,13 +160,16 @@ typedef struct Characters {
 	char totalMana;
 	Item itemSlot;
 	Item potionSlot;
-	bool knowSpell[SPELLS_IN_GAME]; /* If true, character knows that spell, corresponds to the order of the spells in the enum */
+	Effect effect;
+	unsigned char effectDuration;
+
 	char health; /* character dead if(health <= 0) */
 	unsigned char mana; /* Negative mana not allowed, if not enough mana cannot cast a spell */
 	unsigned char attack;
 	unsigned char defense; /* no negative defense, total_damage = attacker's_attack - defender's_defense */
 	char isMonster; /* 0 == is the player character, any other value corresponds to enemy enum */
 	bool isTurn;
+	bool knowSpell[SPELLS_IN_GAME]; /* If true, character knows that spell, corresponds to the order of the spells in the enum */
 	char name[MAX_INPUT_LENGTH];
 } Character;
 
@@ -170,6 +180,8 @@ Character* newPlayerCharacter() {
 	c->totalMana = MONSTER_STATS[0][MANA];
 	c->itemSlot = NOTHING;
 	c->potionSlot = NOTHING;
+	c->effect = NONE;
+	c->effectDuration = 0;
 
 	c->health = MONSTER_STATS[0][HEALTH];
 	c->mana = MONSTER_STATS[0][MANA];
@@ -181,16 +193,12 @@ Character* newPlayerCharacter() {
 	printf("\n");
 	//printf("%s has %u health.\n", c->name, c->health);
 	//printf("%s has %u attack power.\n", c->name, c->attack);
-
 	return c;
 }
 
 /** Creates a new non-player character */
 Character* newCharacter(char message[], Enemy enemy) {
 	assert(enemy);
-	const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
-		"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
-	};
 	Character *m = malloc(sizeof(*m));
 	m->health = MONSTER_STATS[enemy][HEALTH];
 	m->totalHealth = MONSTER_STATS[enemy][HEALTH];
@@ -240,7 +248,7 @@ void lvlUp(Character *c) {
  */
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
-	Sleep(750);
+	Sleep(SLEEP_DURATION);
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
@@ -260,18 +268,19 @@ void status(Character *c) {
 
 /** Output stats of enemy character */
 void enemyStatus(Character *m) {
-	static const char *MONSTER_DESCRIPTIONS[MONSTERS_IN_GAME] = {
-		"",
-		"",
-		"",
-		"",
-		"",
-		""
-	};
 	assert(m->isMonster);
+	static const char *MONSTER_HINTS[MONSTERS_IN_GAME] = {
+		"ERROR\n", /* Character gets no hint */
+		"has a large scar across its hairy chest. It must be weak to physical attacks!\n", /* The Beast */
+		"seems vulnerable to fire.\n", /* The Killer Plant */
+		"is a creature of the night. The sun's rays would prove fatal.\n", /* The Wraith */
+		"has trained with magic for a millennium. Magic and magical items will have no effect on him.\n", /* The Wizard */
+		"an unthinking creature of destruction, it is incapable of magic. Defense is powerful against it!\n", /* The Wizard's Golem */
+		"is the ultimate foe. He has no major weakness.\n" /* The Vampire Lord */
+	};
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n",
 			m->name, m->health, m->totalHealth, m->mana, m->totalMana, m->attack, m->defense);
-	//printf("%s," ); //@TODO print out hints/descriptions here
+	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //@TODO print out hints/descriptions here
 }
 
 /** Output help info */
@@ -287,7 +296,7 @@ void help() {
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n"
 			"\n");
-	Sleep(1000);
+	Sleep(SLEEP_DURATION);
 	bool isYes = yes_or_no("Output additional game information?\n");
 	if(isYes) {
 		printf("Additional information:\n"
@@ -316,7 +325,7 @@ void red_potion(Character *c, bool isGreater) {
 		healVal = 3;
 	}
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	Sleep(1000);
+	Sleep(SLEEP_DURATION);
 	if(c->health + healVal >= c->totalHealth) {
 		c->health = c->totalHealth;
 		printf("%s is now full health.\n", c->name);
@@ -334,7 +343,7 @@ void blue_potion(Character *c, bool isGreater) {
 		manaVal = 3;
 	}
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	Sleep(1000);
+	Sleep(SLEEP_DURATION);
 	if(c->mana + manaVal >= c->totalMana) {
 		c->mana = c->totalMana;
 		printf("%s is now full mana.\n", c->name);
@@ -346,7 +355,8 @@ void blue_potion(Character *c, bool isGreater) {
 
 void panacea(Character *c) {
 	printf("%s drinks the %s. It tastes incredible.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	//@TODO whenever status afflictions are implemented
+	Sleep(SLEEP_DURATION);
+	//@TODO whenever status afflictions are implemented, remove only harmful afflictions
 }
 
 /** Use potion in potionSlot */
@@ -355,7 +365,7 @@ void usePotion(Character *c, bool isInCombat) {
 	switch(c->potionSlot) {
 		case NOTHING:
 			printf("There is no potion in inventory!\n");
-			return; // Don't end turn here
+			return; //Don't end turn here
 		case RED_POTION:
 			red_potion(c, false);
 			break;
@@ -387,14 +397,14 @@ void tears(Character *c) {
 
 void iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
-	//@TODO increase defense but only for a short time (maybe 3 turns?)
+	//@TODO increase defense a decent amount for 2 turns
 }
 
 void demon_fire(Character *user, Character *c) {
 	printf("%s throws a %s at %s, making the room erupt in flames.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
-	Sleep(1000);
+	Sleep(SLEEP_DURATION);
 	const char DEMON_FIRE_DAMAGE = 6;
-	c->health -= DEMON_FIRE_DAMAGE;
+	c->health -= DEMON_FIRE_DAMAGE; /* Impossible to get this item before fighting KILLER_PLANT */
 	if(user->isMonster) {
 		user->itemSlot = NOTHING;
 	}
@@ -444,8 +454,16 @@ void useItem(Character *c, Character *m) {
 /***** Spell Functions *****/
 void fireball(Character *caster, Character *c) {
 	printf("%s casts fireball!\n", caster->name);
-	const char FIREBALL_DAMAGE = 3;
-
+	Sleep(SLEEP_DURATION);
+	if(c->isMonster == KILLER_PLANT) {
+		const char FIREBALL_DAMAGE = 5;
+		c->health -= FIREBALL_DAMAGE;
+		printf("%s contorts in pain, taking %d damage!", c->name, FIREBALL_DAMAGE);
+	} else {
+		const char FIREBALL_DAMAGE = 3;
+		c->health -= FIREBALL_DAMAGE;
+		printf("%s burns from the flames, taking %d damage!", c->name, FIREBALL_DAMAGE);
+	}
 }
 void lightning_stake(Character *caster, Character *c) {
 	//@TODO
@@ -530,7 +548,7 @@ void castSpell(Character *c, Character *m) {
 		}
 	} else {
 		printf("%s tries to cast magic, but doesn't know how. %s chuckles.\n", c->name, m->name);
-		Sleep(1000);
+		Sleep(SLEEP_DURATION);
 	}
 	c->isTurn = false;
 }
@@ -612,7 +630,7 @@ void actions(Character *c, Character *m) {
 /** When not the players turn, the monster does something: as of right now, it will always attack */
 void monsterAction(Character *m, Character *c) {
 	if(!c->isTurn) {
-		Sleep(750);
+		Sleep(SLEEP_DURATION);
 		meleeAttack(m, c);
 	}
 	c->isTurn = true;
@@ -622,10 +640,11 @@ void monsterAction(Character *m, Character *c) {
  *  Pass in player character, particular item that is found, and message.
  *  Whether "Item" is a Spell, potion, or Item will be determined in the function.
  *  If item, needs to go in itemSlot; if potion, needs to go in potionSlot, spells stored in knowSpell.
+ *  message should have a trailing \n.
  */
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
-	printf("%s\nIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
+	printf("%sIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
 	switch(itemFound) { /* Never going to find nothing so skip 0 */
 		/* for spells, add to knowSpell */
@@ -634,7 +653,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			break;
 		/* for potions, offer to use item in inventory and take new item */
 		case 6: case 7: case 8:	case 9:	case 10:
-			printf("Add %s to potion inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
+			printf("Add %s to potion inventory? ", ITEM_AND_SPELL_NAMES[itemFound]);
 			if(c->potionSlot == NOTHING) {
 				isYes = yes_or_no("\n");
 			} else {
@@ -675,6 +694,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
  */
 
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
+	assert(!c->isMonster && m->isMonster);
 	while(true) {
 		actions(c, m);
 		if(m->health <= 0) {
@@ -713,12 +733,17 @@ void lvl0(Character *c) {
 	combat_sequence(c, m, 1);
 	free(m);
 }
+void lvl1(Character *c) {
+
+}
+
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
-//@TODO add option to save game each time a monster is defeated
 int main() {
 	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
 	lvl0(c);
-	//status(c);
+	item_or_spell_found(c, RED_POTION, "A potion is found!\n");
+	item_or_spell_found(c, GREATER_RED_POTION, "A potion is found!\n");
+	status(c);
 	free(c);
 	return 0;
 }
