@@ -99,11 +99,11 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"Find powerful items and potions in the mansion.\n",
 
-	"The magic of the southern deserts. It radiates blue with magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
+	"The magic of the southern deserts. The fire radiates with a blue, magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
 	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.\n",
 	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.\n",
 	"The magic of the flagellants.\n When used, the enemy is instantly defeated, but the health of the caster is reduced to 1.\n",
-	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n"
+	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n",
 
 	"A red, slimey liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n",
 	"A red, slimey liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.\n",
@@ -189,6 +189,7 @@ Character* newPlayerCharacter() {
 	c->defense = MONSTER_STATS[0][DEFENSE];
 	c->isMonster = 0;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
+	for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = true;
 	getInput(c->name, "Enter your traveler's name: ");
 	printf("\n");
 	//printf("%s has %u health.\n", c->name, c->health);
@@ -259,14 +260,40 @@ void meleeAttack(Character *attacker, Character *c) {
 	if(!attacker->isMonster) attacker->isTurn = false;
 }
 
-/** Output stats of player character */
+/* Output status, use enemyStatus for non-player characters */
 void status(Character *c) {
-	assert(!c->isMonster);
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n",
 			c->name, c->health, c->totalHealth, c->mana, c->totalMana, c->attack, c->defense);
+	if(!c->itemSlot) {
+		printf("%s in item slot.\n", ITEM_AND_SPELL_NAMES[c->itemSlot]);
+	}
+	if(!c->potionSlot) {
+		printf("%s in potion slot.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+	}
+	bool anySpells = false;
+	for(int i = 0; i < SPELLS_IN_GAME; i++) {
+		if(c->knowSpell[i]) {
+			anySpells = true;
+			break;
+		}
+	}
+	if(anySpells) {
+		printf("%s knows the following spells:\n", c->name);
+		if(c->knowSpell[0]) { // FIREBALL
+			printf("\tFireball(f)\n");
+		} if(c->knowSpell[1]) { // LIGHTNING_STAKE
+			printf("\tLightning Stake(L)\n");
+		} if(c->knowSpell[2]) { // SUMMON_SHEEP
+			printf("\tSummon Sheep(s)\n");
+		} if(c->knowSpell[3]) { // SACRIFICIAL_BRAND
+			printf("\tSacrificial Brand(b)\n");
+		} if(c->knowSpell[4]) { // FROST_RESONANCE
+			printf("\tFrost Resonance(r)\n");
+		}
+	}
 }
 
-/** Output stats of enemy character */
+/** Output status of enemy character, calls status */
 void enemyStatus(Character *m) {
 	assert(m->isMonster);
 	static const char *MONSTER_HINTS[MONSTERS_IN_GAME] = {
@@ -278,8 +305,7 @@ void enemyStatus(Character *m) {
 		"an unthinking creature of destruction, it is incapable of magic. Defense is powerful against it!\n", /* The Wizard's Golem */
 		"is the ultimate foe. He has no major weakness.\n" /* The Vampire Lord */
 	};
-	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n",
-			m->name, m->health, m->totalHealth, m->mana, m->totalMana, m->attack, m->defense);
+	status(m);
 	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //@TODO print out hints/descriptions here
 }
 
@@ -644,12 +670,13 @@ void monsterAction(Character *m, Character *c) {
  */
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
+	// printf("\nTEST: %s: %s\n\n", ITEM_AND_SPELL_NAMES[itemFound], ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	printf("%sIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
 	switch(itemFound) { /* Never going to find nothing so skip 0 */
 		/* for spells, add to knowSpell */
 		case 1: case 2: case 3: case 4: case 5:
-			c->knowSpell[itemFound - 1] = true;
+			c->knowSpell[itemFound - 1] = true; //-1 needed since 0 is NOTHING, bad but w/e
 			break;
 		/* for potions, offer to use item in inventory and take new item */
 		case 6: case 7: case 8:	case 9:	case 10:
@@ -728,22 +755,30 @@ void lvl0(Character *c) {
 	printf("Light streams into the mansion, revealing the dust floating in the air."); pressEnter();
 	printf("SLAM! The door closes behind %s!", c->name); pressEnter();
 	printf("%s turns and hears unnatural growls.", c->name); pressEnter();
-	Character *m = newCharacter(" appears!", BEAST);
-	printf("Type help(h) for how to fight!\n");
+	Character *m = newCharacter(" appears!\nType help(h) for how to fight!", BEAST);
+	printf("");
 	combat_sequence(c, m, 1);
 	free(m);
 }
 void lvl1(Character *c) {
+	printf("");
+	item_or_spell_found(c, RED_POTION, "A potion is found!\n");
+	bool isYes = yes_or_no("");
+	if(isYes) {
 
+	} else {
+
+	}
+	item_or_spell_found(c, GREATER_RED_POTION, "A potion is found!\n");
+	item_or_spell_found(c, BLUE_POTION, "A potion is found!\n");
+	status(c);
 }
 
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
 	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
 	lvl0(c);
-	item_or_spell_found(c, RED_POTION, "A potion is found!\n");
-	item_or_spell_found(c, GREATER_RED_POTION, "A potion is found!\n");
-	status(c);
+	lvl1(c);
 	free(c);
 	return 0;
 }
