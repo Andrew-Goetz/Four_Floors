@@ -27,9 +27,9 @@
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Player Character */	5, 3, 2, 1,
 	/* Beast */ 			5, 0, 2, 0,
-	/* Killer Plant */ 		6, 0, 2, 1, /* Almost 1 shot by fireball */
-	/* Wraith */ 			7, 2, 2, 1, /* Almost 1 shot by light vial */
-	/* Mad Wizard */ 		5, 5, 1, 0, /* Immune to magic */
+	/* Killer Plant */ 		9, 0, 2, 1, /* Almost 1 shot by fireball */
+	/* Wraith */ 			7, 2, 3, 1, /* Almost 1 shot by light vial */
+	/* Mad Wizard */ 		5, 5, 1, 0, /* Immune to magic, casts a lot of spells */
 	/* Wizard's Golem */ 	10, 0, 4, 3, /* All physical damage so iron pellet good against him */
 	/* Vampire Lord */		9, 3, 4, 2
 };
@@ -173,7 +173,7 @@ typedef struct Characters {
 	char name[MAX_INPUT_LENGTH];
 } Character;
 
-/** Creates a new player character, should only be called once until multiplayer is added */
+/** Creates a new player character, should only be called once */
 Character* newPlayerCharacter() {
 	Character *c = malloc(sizeof(*c));
 	c->totalHealth = MONSTER_STATS[0][HEALTH];
@@ -189,9 +189,8 @@ Character* newPlayerCharacter() {
 	c->defense = MONSTER_STATS[0][DEFENSE];
 	c->isMonster = 0;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
-	for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = true;
+	// for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = true; //for testing spells
 	getInput(c->name, "Enter your traveler's name: ");
-	printf("\n");
 	//printf("%s has %u health.\n", c->name, c->health);
 	//printf("%s has %u attack power.\n", c->name, c->attack);
 	return c;
@@ -320,8 +319,7 @@ void help() {
 			"\titem(i)\t\tuse item, ending turn\n"
 			"\tcast(c)\t\tcast spell, ending turn\n"
 			"\twait(w)\t\tdo nothing, ending turn\n"
-			"\tescape(exit)\tabandon quest and flee\n"
-			"\n");
+			"\tescape(exit)\tabandon quest and flee\n");
 	Sleep(SLEEP_DURATION);
 	bool isYes = yes_or_no("Output additional game information?\n");
 	if(isYes) {
@@ -423,18 +421,24 @@ void tears(Character *c) {
 
 void iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
-	//@TODO increase defense a decent amount for 2 turns
+	//@TODO increase defense a decent amount for 3 turns
 }
 
 void demon_fire(Character *user, Character *c) {
 	printf("%s throws a %s at %s, making the room erupt in flames.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
 	Sleep(SLEEP_DURATION);
-	const char DEMON_FIRE_DAMAGE = 6;
-	c->health -= DEMON_FIRE_DAMAGE; /* Impossible to get this item before fighting KILLER_PLANT */
+	if(c->isMonster == KILLER_PLANT) {
+		const char DEMON_FIRE_DAMAGE = c->totalHealth; //gets oneshot
+		c->health -= DEMON_FIRE_DAMAGE;
+		printf("%s burns in the fires of hell, then shrivels away into nothingness.", c->name);
+	} else {
+		const char DEMON_FIRE_DAMAGE = 5;
+		c->health -= DEMON_FIRE_DAMAGE;
+		printf("%s is severely burned, taking %d damage!", c->name, DEMON_FIRE_DAMAGE);
+	}
 	if(user->isMonster) {
 		user->itemSlot = NOTHING;
 	}
-	printf("%s takes %d damage!\n", c->name, DEMON_FIRE_DAMAGE);
 }
 
 void light_vial(Character *user, Character *c) {
@@ -482,9 +486,9 @@ void fireball(Character *caster, Character *c) {
 	printf("%s casts fireball!\n", caster->name);
 	Sleep(SLEEP_DURATION);
 	if(c->isMonster == KILLER_PLANT) {
-		const char FIREBALL_DAMAGE = 5;
+		const char FIREBALL_DAMAGE = 7;
 		c->health -= FIREBALL_DAMAGE;
-		printf("%s contorts in pain, taking %d damage!", c->name, FIREBALL_DAMAGE);
+		printf("%s contorts in intense pain, taking %d damage!", c->name, FIREBALL_DAMAGE);
 	} else {
 		const char FIREBALL_DAMAGE = 3;
 		c->health -= FIREBALL_DAMAGE;
@@ -668,10 +672,11 @@ void monsterAction(Character *m, Character *c) {
  *  If item, needs to go in itemSlot; if potion, needs to go in potionSlot, spells stored in knowSpell.
  *  message should have a trailing \n.
  */
+ //@TODO make clear that magic spell is learned
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
 	// printf("\nTEST: %s: %s\n\n", ITEM_AND_SPELL_NAMES[itemFound], ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
-	printf("%sIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
+	printf("%sIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]); //@TODO change so its "Press enter to see description"
 	bool isYes;
 	switch(itemFound) { /* Never going to find nothing so skip 0 */
 		/* for spells, add to knowSpell */
@@ -688,7 +693,9 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 				isYes = yes_or_no(" will be used before being discarded.\n");
 			}
 			if(isYes) {
-				usePotion(c, false);
+				if(c->potionSlot) {
+					usePotion(c, false);
+				}
 				c->potionSlot = itemFound;
 				printf("%s is now in potion inventory\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 			} else {
@@ -738,12 +745,13 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 		}
 //		printf("state of isTurn: %d\n", player->isTurn);
 	}
-
+	free(m);
+	c->isTurn = true;
 }
 
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
-	printf("A forest of trees disperse into a clearing; in it lies a massive, four-floor mansion."); pressEnter();
+	printf("A forest of trees surrounds a clearing; it is here that a massive, four-floor mansion, stands."); pressEnter();
 	printf("%s wonders: what might lie on the fourth floor?", c->name); pressEnter();
 	printf("%s reaches the massive front doors of the mansion.\n", c->name);
 	bool isYes = yes_or_no("Enter the mansion, beginning a perilous journey?\n");
@@ -756,24 +764,44 @@ void lvl0(Character *c) {
 	printf("SLAM! The door closes behind %s!", c->name); pressEnter();
 	printf("%s turns and hears unnatural growls.", c->name); pressEnter();
 	Character *m = newCharacter(" appears!\nType help(h) for how to fight!", BEAST);
-	printf("");
 	combat_sequence(c, m, 1);
-	free(m);
 }
 void lvl1(Character *c) {
-	printf("");
-	item_or_spell_found(c, RED_POTION, "A potion is found!\n");
-	bool isYes = yes_or_no("");
+	printf("Looking at %s on the ground, %s notices a strange brand near the beast's torso. "
+		   "Maybe it's important.", MONSTER_NAMES[BEAST], c->name); pressEnter();
+	printf("With the first foe defeated, it is time to move on! Press enter to continue deeper into the mansion."); pressEnter();
+	item_or_spell_found(c, RED_POTION, "After walking down a hallway, a potion can be seen sitting on a bookshelf.\n");
+	printf("%s enters a massive room with another hallway branching off to the left.", c->name); pressEnter();
+	bool isYes = yes_or_no("Take this other path?\n");
 	if(isYes) {
-
+		printf("Something about this left hallway seems special. %s heads left and leaves the room.", c->name); pressEnter();
+		printf("The hallway continues for a time before making an abrupt right turn. Press enter to see what's around the corner."); pressEnter();
+		item_or_spell_found(c, FIREBALL, "On a small table on the side of the hall, there is a magical scroll!\n");
+		printf("At the end of the hallway there is a door. Press enter to open it."); pressEnter();
 	} else {
-
+		printf("%s decides to stay on the current path and leaves the room.", c->name); pressEnter();
+		printf("The next room is charred black; there must have been an intense fire here long ago."); pressEnter();
+		item_or_spell_found(c, DEMON_FIRE, "In a tattered robe on the floor is a mysterious vial of liquid.\n");
+		printf("The door is charred black; despite this, %s manages to force it open.", c->name); pressEnter();
 	}
-	item_or_spell_found(c, GREATER_RED_POTION, "A potion is found!\n");
-	item_or_spell_found(c, BLUE_POTION, "A potion is found!\n");
-	status(c);
+	printf("In the next room, %s sees a staircase. This must lead to the second floor!", c->name); pressEnter();
+	printf("The distant voice of an elderly man echoes mysteriously in the distance: \"Begone from this place, stranger!\""); pressEnter();
+	printf("Suddenly, a magical glow fills the air, and a massive plant grows rapidly out of the ground."); pressEnter();
+	printf("It resembles a Venus flytrap, only 100 times the size!"); pressEnter();
+	Character *m = newCharacter(" appears!", KILLER_PLANT);
+	combat_sequence(c, m, 1);
 }
+void lvl2(Character *c) {
+	item_or_spell_found(c, BLUE_POTION, "As %s droops to the ground, %s sees a potion!\n");
 
+}
+void lvl3(Character *c) {
+
+}
+void the_end(Character *c) {
+
+}
+//@TODO: might still need to implement drinking a potion inbetween fights
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
 	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
