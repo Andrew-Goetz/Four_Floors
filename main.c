@@ -95,7 +95,6 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* PotionItems */
 	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul" /* Items */
 };
-//@TODO fix issue with description output for potions, greater red potion gives description for blue potion
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"Find powerful items and potions in the mansion.\n",
 
@@ -305,7 +304,7 @@ void enemyStatus(Character *m) {
 		"is the ultimate foe. He has no major weakness.\n" /* The Vampire Lord */
 	};
 	status(m);
-	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //@TODO print out hints/descriptions here
+	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //prints out hints/descriptions here
 }
 
 /** Output help info */
@@ -488,11 +487,11 @@ void fireball(Character *caster, Character *c) {
 	if(c->isMonster == KILLER_PLANT) {
 		const char FIREBALL_DAMAGE = 7;
 		c->health -= FIREBALL_DAMAGE;
-		printf("%s contorts in intense pain, taking %d damage!", c->name, FIREBALL_DAMAGE);
+		printf("%s contorts in intense pain, taking %d damage!\n", c->name, FIREBALL_DAMAGE);
 	} else {
 		const char FIREBALL_DAMAGE = 3;
 		c->health -= FIREBALL_DAMAGE;
-		printf("%s burns from the flames, taking %d damage!", c->name, FIREBALL_DAMAGE);
+		printf("%s burns from the flames, taking %d damage!\n", c->name, FIREBALL_DAMAGE);
 	}
 }
 void lightning_stake(Character *caster, Character *c) {
@@ -554,6 +553,7 @@ void castSpell(Character *c, Character *m) {
 		} if(c->knowSpell[4]) { // FROST_RESONANCE
 			printf("Frost Resonance(r)? ");
 		}
+		printf("\n");
 		char input[MAX_INPUT_LENGTH];
 		while(true) {
 			getInput(input, ">> ");
@@ -615,7 +615,7 @@ void actions(Character *c, Character *m) {
 			status(c);
 			return;
 		}
-		/* enemy(e): outputs non-player-character's status, and //@TODO a hint to help fight him */
+		/* enemy(e): outputs non-player-character's status, a help fight him */
 		if(_stricmp(input, "enemy") == 0 || _stricmp(input, "e") == 0) {
 			enemyStatus(m);
 			return;
@@ -672,20 +672,27 @@ void monsterAction(Character *m, Character *c) {
  *  If item, needs to go in itemSlot; if potion, needs to go in potionSlot, spells stored in knowSpell.
  *  message should have a trailing \n.
  */
- //@TODO make clear that magic spell is learned
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
 	// printf("\nTEST: %s: %s\n\n", ITEM_AND_SPELL_NAMES[itemFound], ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
-	printf("%sIts description reads:\n%s", message, ITEM_AND_SPELL_DESCRIPTIONS[itemFound]); //@TODO change so its "Press enter to see description"
+	printf("%sPress enter to read its description:", message); pressEnter();
+	printf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
 	switch(itemFound) { /* Never going to find nothing so skip 0 */
 		/* for spells, add to knowSpell */
 		case 1: case 2: case 3: case 4: case 5:
-			c->knowSpell[itemFound - 1] = true; //-1 needed since 0 is NOTHING, bad but w/e
+			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
+			isYes = yes_or_no("\n");
+			if(isYes) {
+				c->knowSpell[itemFound - 1] = true; //-1 needed since 0 is NOTHING, bad but w/e
+				printf("After reading the scroll, %s figures out how to cast %s.\n", c->name, ITEM_AND_SPELL_NAMES[itemFound]);
+			} else {
+				printf("Ok then.\n");
+			}
 			break;
 		/* for potions, offer to use item in inventory and take new item */
 		case 6: case 7: case 8:	case 9:	case 10:
-			printf("Add %s to potion inventory? ", ITEM_AND_SPELL_NAMES[itemFound]);
+			printf("Add %s to potion inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
 			if(c->potionSlot == NOTHING) {
 				isYes = yes_or_no("\n");
 			} else {
@@ -718,15 +725,17 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 				printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 			}
 			break;
-		default:
-			printf("It vanishes before your eyes. It must have been an illusion!\n");
+		default: //in case something weird happens
+			printf("Something goes wrong. It must have been an illusion!\n");
 	}
 }
+/** Quick function that asks if player wants to drink potion inbetween battles */
+
+
 /** Function called once each level when combat is in progress.
  *  c is the player character, m is the monster, and levelUpNumber is the 
  *	number of times the lvlUp will be called when m is defeated.
  */
-
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	assert(!c->isMonster && m->isMonster);
 	while(true) {
@@ -748,7 +757,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	free(m);
 	c->isTurn = true;
 }
-
+//@TODO fix issue with character knowing spells initially before learning any, knows L, b, and r at beginning of game
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
 	printf("A forest of trees surrounds a clearing; it is here that a massive, four-floor mansion, stands."); pressEnter();
@@ -796,7 +805,11 @@ void lvl2(Character *c) {
 
 }
 void lvl3(Character *c) {
-
+	if(c->potionSlot) {
+		printf("");
+	} else {
+		printf("");
+	}
 }
 void the_end(Character *c) {
 
