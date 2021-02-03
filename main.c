@@ -729,12 +729,24 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			printf("Something goes wrong. It must have been an illusion!\n");
 	}
 }
-/** Quick function that asks if player wants to drink potion inbetween battles */
-
+/** Quick function that asks if player wants to drink potion inbetween battles. */
+void drink_potion(Character *c) {
+	printf("%s looks around and sees no enemies; safety, for the time being."); pressEnter();
+	if(!c->potionSlot) {
+		printf("It would be the perfect time to drink a potion, but unfortunately %s's potion slot is empty!", c->name); pressEnter();
+		return;
+	}
+	bool isYes = yes_or_no("Drink a potion while out of combat?\n");
+	if(isYes) {
+		usePotion(c, false);
+	} else {
+		printf("Ok then.\n");
+	}
+}
 
 /** Function called once each level when combat is in progress.
  *  c is the player character, m is the monster, and levelUpNumber is the 
- *	number of times the lvlUp will be called when m is defeated.
+ *	number of times the lvlUp function will be called when m is defeated.
  */
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	assert(!c->isMonster && m->isMonster);
@@ -805,11 +817,7 @@ void lvl2(Character *c) {
 
 }
 void lvl3(Character *c) {
-	if(c->potionSlot) {
-		printf("");
-	} else {
-		printf("");
-	}
+
 }
 void the_end(Character *c) {
 
