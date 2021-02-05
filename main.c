@@ -57,7 +57,9 @@ typedef enum ENEMY_TYPES {
 } Enemy;
 
 typedef enum STATUS_EFFECTS { /* Many relate to spells/items below */
-	NONE, /* default status effect */
+	/* None(0) is the default status effect */
+	NONE,
+	/*  */
 	STUN,
 	POISON,
 	DRAINED,
@@ -143,7 +145,7 @@ bool yes_or_no(char message[]) {
 	printf("%s", message); /* assumes message will end with \n */
 	while(true) {
 		getInput(input, "Yes(y) or No(n): ");
-		if(_stricmp(input, "yes") == 0 || _stricmp(input, "y") == 0) {
+		if(_stricmp(input, "yes") == 0 || _stricmp(input, "y") == 0) { //|| _stricmp(input, "\n") == 0) { /* \n works too for yes */
 			return true;
 		} else if(_stricmp(input, "no") == 0 || _stricmp(input, "n") == 0) {
 			return false;
@@ -175,8 +177,8 @@ typedef struct Characters {
 /** Creates a new player character, should only be called once */
 Character* newPlayerCharacter() {
 	Character *c = malloc(sizeof(*c));
-	c->totalHealth = MONSTER_STATS[0][HEALTH];
-	c->totalMana = MONSTER_STATS[0][MANA];
+	c->totalHealth = MONSTER_STATS[PLAYER][HEALTH];
+	c->totalMana = MONSTER_STATS[PLAYER][MANA];
 	c->itemSlot = NOTHING;
 	c->potionSlot = NOTHING;
 	c->effect = NONE;
@@ -186,9 +188,10 @@ Character* newPlayerCharacter() {
 	c->mana = MONSTER_STATS[0][MANA];
 	c->attack = MONSTER_STATS[0][ATTACK];
 	c->defense = MONSTER_STATS[0][DEFENSE];
-	c->isMonster = 0;
+	c->isMonster = PLAYER;
 	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
 	// for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = true; //for testing spells
+	for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = false; //for testing spells
 	getInput(c->name, "Enter your traveler's name: ");
 	//printf("%s has %u health.\n", c->name, c->health);
 	//printf("%s has %u attack power.\n", c->name, c->attack);
@@ -201,6 +204,9 @@ Character* newCharacter(char message[], Enemy enemy) {
 	Character *m = malloc(sizeof(*m));
 	m->health = MONSTER_STATS[enemy][HEALTH];
 	m->totalHealth = MONSTER_STATS[enemy][HEALTH];
+	m->itemSlot = NOTHING;
+	m->potionSlot = NOTHING;
+
 	m->mana = MONSTER_STATS[enemy][MANA];
 	m->totalMana = MONSTER_STATS[enemy][MANA];
 	m->attack = MONSTER_STATS[enemy][ATTACK];
@@ -220,19 +226,19 @@ void lvlUp(Character *c) {
 		getInput(input, ">> ");
 		if(_stricmp(input, "health") == 0 || _stricmp(input, "h") == 0) {
 			c->totalHealth++; c->health++;
-			printf("%s feels healthier.\n\n", c->name);
+			printf("%s feels healthier.\n", c->name);
 			return;
 		} else if(_stricmp(input, "mana") == 0 || _stricmp(input, "m") == 0) {
 			c->totalMana++; c->mana++;
-			printf("%s feels more intelligent.\n\n", c->name);
+			printf("%s feels more intelligent.\n", c->name);
 			return;
 		} else if(_stricmp(input, "attack") == 0 || _stricmp(input, "a") == 0) {
 			c->attack++;
-			printf("%s feels more powerful.\n\n", c->name);
+			printf("%s feels more powerful.\n", c->name);
 			return;
 		} else if(_stricmp(input, "defense") == 0 || _stricmp(input, "d") == 0) {
 			c->defense++;
-			printf("%s feels stronger.\n\n", c->name);
+			printf("%s feels stronger.\n", c->name);
 			return;
 		} else {
 			printf("Invalid input.\n");
@@ -262,10 +268,10 @@ void meleeAttack(Character *attacker, Character *c) {
 void status(Character *c) {
 	printf("%s's stats:\n\tHealth:%d/%d\n\tMana:%d/%d\n\tAttack:%d\n\tDefense:%d\n",
 			c->name, c->health, c->totalHealth, c->mana, c->totalMana, c->attack, c->defense);
-	if(!c->itemSlot) {
+	if(c->itemSlot) {
 		printf("%s in item slot.\n", ITEM_AND_SPELL_NAMES[c->itemSlot]);
 	}
-	if(!c->potionSlot) {
+	if(c->potionSlot) {
 		printf("%s in potion slot.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 	}
 	bool anySpells = false;
@@ -406,9 +412,10 @@ void usePotion(Character *c, bool isInCombat) {
 			break;
 		default:
 			printf("The item had no effect. Must have been a dud!\n");
+			printf("\n\n%d\n\n\n", c->potionSlot);
 			break;
 	}
-	c->itemSlot = NOTHING;
+	c->potionSlot = NOTHING;
 	if(isInCombat) c->isTurn = false;
 }
 
@@ -429,11 +436,11 @@ void demon_fire(Character *user, Character *c) {
 	if(c->isMonster == KILLER_PLANT) {
 		const char DEMON_FIRE_DAMAGE = c->totalHealth; //gets oneshot
 		c->health -= DEMON_FIRE_DAMAGE;
-		printf("%s burns in the fires of hell, then shrivels away into nothingness.", c->name);
+		printf("%s burns in the fires of hell, draining it of all life energy.\n", c->name);
 	} else {
 		const char DEMON_FIRE_DAMAGE = 5;
 		c->health -= DEMON_FIRE_DAMAGE;
-		printf("%s is severely burned, taking %d damage!", c->name, DEMON_FIRE_DAMAGE);
+		printf("%s is severely burned, taking %d damage!\n", c->name, DEMON_FIRE_DAMAGE);
 	}
 	if(user->isMonster) {
 		user->itemSlot = NOTHING;
@@ -680,7 +687,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	bool isYes;
 	switch(itemFound) { /* Never going to find nothing so skip 0 */
 		/* for spells, add to knowSpell */
-		case 1: case 2: case 3: case 4: case 5:
+		case FIREBALL: case LIGHTNING_STAKE: case SUMMON_SHEEP: case SACRIFICIAL_BRAND: case FROST_RESONANCE:
 			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
 			isYes = yes_or_no("\n");
 			if(isYes) {
@@ -691,9 +698,9 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			}
 			break;
 		/* for potions, offer to use item in inventory and take new item */
-		case 6: case 7: case 8:	case 9:	case 10:
+		case RED_POTION: case GREATER_RED_POTION: case BLUE_POTION:	case GREATER_BLUE_POTION: case PANACEA:
 			printf("Add %s to potion inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
-			if(c->potionSlot == NOTHING) {
+			if(!c->potionSlot) {
 				isYes = yes_or_no("\n");
 			} else {
 				printf("%s", ITEM_AND_SPELL_NAMES[c->potionSlot]);
@@ -706,23 +713,34 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 				c->potionSlot = itemFound;
 				printf("%s is now in potion inventory\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 			} else {
-				printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				if(c->potionSlot) {
+					printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				} else {
+					printf("Ok then.\n");
+				}
 			}
 			break;
-		/* for items, offer to use item in inventory and take new item */
-		case 11: case 12: case 13: case 14: case 15:
+		/* for items, offer to discard current item in inventory if one exists and pick up found one */
+		case TEARS: case IRON_PELLET: case DEMON_FIRE: case LIGHT_VIAL: case HORN_OF_SAUL:
 			printf("Add %s to item inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
-			if(c->itemSlot == NOTHING) {
+			if(!c->itemSlot) {
 				isYes = yes_or_no("\n");
 			} else {
 				printf("%s", ITEM_AND_SPELL_NAMES[c->itemSlot]);
 				isYes = yes_or_no(" will be discarded.\n");
 			}
 			if(isYes) {
-				usePotion(c, false);
-				c->potionSlot = itemFound;
+				if(c->itemSlot) {
+					printf("%s is discarded, and ", ITEM_AND_SPELL_NAMES[c->itemSlot]);
+				}
+				printf("%s is put into item inventory.\n", ITEM_AND_SPELL_NAMES[itemFound]);
+				c->itemSlot = itemFound;
 			} else {
-				printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				if(c->itemSlot) {
+					printf("%s remains in item inventory.\n", ITEM_AND_SPELL_NAMES[c->itemSlot]);
+				} else {
+					printf("Ok then.\n");
+				}
 			}
 			break;
 		default: //in case something weird happens
@@ -731,12 +749,14 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 }
 /** Quick function that asks if player wants to drink potion inbetween battles. */
 void drink_potion(Character *c) {
-	printf("%s looks around and sees no enemies; safety, for the time being."); pressEnter();
+	printf("%s looks around and sees no enemies; safety, for the time being.", c->name); pressEnter();
 	if(!c->potionSlot) {
-		printf("It would be the perfect time to drink a potion, but unfortunately %s's potion slot is empty!", c->name); pressEnter();
+		printf("It would be the perfect time to drink a potion; unfortunately, %s's potion slot is empty!", c->name); pressEnter();
 		return;
 	}
-	bool isYes = yes_or_no("Drink a potion while out of combat?\n");
+	printf("%s currently has %d/%d health and %d/%d mana.\n", c->name, c->health, c->totalHealth, c->mana, c->totalMana);
+	printf("Drink the %s in inventory while out of combat?", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+	bool isYes = yes_or_no("\n");
 	if(isYes) {
 		usePotion(c, false);
 	} else {
@@ -747,9 +767,12 @@ void drink_potion(Character *c) {
 /** Function called once each level when combat is in progress.
  *  c is the player character, m is the monster, and levelUpNumber is the 
  *	number of times the lvlUp function will be called when m is defeated.
+ *  Also keeps track of turn number so that status effects can be applied properly.
  */
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	assert(!c->isMonster && m->isMonster);
+	unsigned char turn_number = 0;
+	bool isTurnChanged;
 	while(true) {
 		actions(c, m);
 		if(m->health <= 0) {
@@ -759,12 +782,16 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			}
 			break;
 		}
+		bool isTurnChanged = c->isTurn;
 		monsterAction(m, c);
 		if(c->health <= 0) {
 			printf("%s has been defeated!\n", c->name);
-			break;
+			free(m); free(c); exit(0);
 		}
-//		printf("state of isTurn: %d\n", player->isTurn);
+		if(isTurnChanged != c->isTurn) {
+			turn_number++;
+			// printf("\n%d\n\n", turn_number);
+		}
 	}
 	free(m);
 	c->isTurn = true;
@@ -792,6 +819,7 @@ void lvl1(Character *c) {
 		   "Maybe it's important.", MONSTER_NAMES[BEAST], c->name); pressEnter();
 	printf("With the first foe defeated, it is time to move on! Press enter to continue deeper into the mansion."); pressEnter();
 	item_or_spell_found(c, RED_POTION, "After walking down a hallway, a potion can be seen sitting on a bookshelf.\n");
+	drink_potion(c);
 	printf("%s enters a massive room with another hallway branching off to the left.", c->name); pressEnter();
 	bool isYes = yes_or_no("Take this other path?\n");
 	if(isYes) {
@@ -813,16 +841,23 @@ void lvl1(Character *c) {
 	combat_sequence(c, m, 1);
 }
 void lvl2(Character *c) {
-	item_or_spell_found(c, BLUE_POTION, "As %s droops to the ground, %s sees a potion!\n");
+	printf("%s droops to the ground, then magically shrinks back down to normal size.", MONSTER_NAMES[KILLER_PLANT]); pressEnter();
+	// item_or_spell_found(c, BLUE_POTION, "As %s droops to the ground, %s sees a potion!\n");
 
+	Character *m = newCharacter(" appears!", WRAITH);
+	combat_sequence(c, m, 1);
 }
 void lvl3(Character *c) {
+	Character *m = newCharacter(" appears!", MAD_WIZARD);
+	combat_sequence(c, m, 2);
 
 }
 void the_end(Character *c) {
 
+	Character *m = newCharacter(" appears!", GOLEM);
+	combat_sequence(c, m, 2);
 }
-//@TODO: might still need to implement drinking a potion inbetween fights
+
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
 	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
