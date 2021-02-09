@@ -28,8 +28,8 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Player Character */	5, 3, 2, 1,
 	/* Beast */ 			5, 0, 2, 0,
 	/* Killer Plant */ 		9, 0, 2, 1, /* Almost 1 shot by fireball */
-	/* Wraith */ 			7, 2, 3, 1, /* Almost 1 shot by light vial */
-	/* Mad Wizard */ 		5, 5, 1, 0, /* Immune to magic, casts a lot of spells */
+	/* Wraith */ 			8, 2, 3, 1, /* Almost 1 shot by light vial */
+	/* Mad Wizard */ 		7, 5, 1, 0, /* Immune to magic, casts a lot of spells */
 	/* Wizard's Golem */ 	10, 0, 4, 3, /* All physical damage so iron pellet good against him */
 	/* Vampire Lord */		9, 3, 4, 2
 };
@@ -130,7 +130,8 @@ void getInput(char input[], char message[]) {
 }
 
 /** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
- *  Also important: don't use \n at end of printf when pressEnter() is called immediately after.
+ *  Also important: don't use \n at end of printf when pressEnter() is called immediately after,
+ *  because the user pressing enter already goes to the next line.
  */
 void pressEnter() {
 	//printf("%s", message);
@@ -305,9 +306,9 @@ void enemyStatus(Character *m) {
 		"has a large scar across its hairy chest. It must be weak to physical attacks!\n", /* The Beast */
 		"seems vulnerable to fire.\n", /* The Killer Plant */
 		"is a creature of the night. The sun's rays would prove fatal.\n", /* The Wraith */
-		"has trained with magic for a millennium. Magic and magical items will have no effect on him.\n", /* The Wizard */
-		"an unthinking creature of destruction, it is incapable of magic. Defense is powerful against it!\n", /* The Wizard's Golem */
-		"is the ultimate foe. He has no major weakness.\n" /* The Vampire Lord */
+		"is a powerful wizard, yet also an old man. melee attacks would be powerful against him.\n", /* The Wizard */
+		"is an unthinking creature of destruction; attacking with massive physical blows, defense must be powerful against it!\n", /* The Wizard's Golem */
+		"is the ultimate foe. He has no obvious weakness weakness.\n" /* The Vampire Lord */
 	};
 	status(m);
 	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //prints out hints/descriptions here
@@ -446,11 +447,14 @@ void demon_fire(Character *user, Character *c) {
 		user->itemSlot = NOTHING;
 	}
 }
-
+/* Stuns enemy for two turns */
 void light_vial(Character *user, Character *c) {
 	assert(!user->isMonster);
-	printf("%s throws a %s at %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name, c->name);
-	
+	if(c->isMonster == WRAITH) {
+		const char LIGHT_VIAL_DAMAGE = 5;
+	} else {
+		printf("%s throws a %s at %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name, c->name);
+	}
 }
 
 void horn(Character *user, Character *c) {
@@ -764,6 +768,10 @@ void drink_potion(Character *c) {
 	}
 }
 
+void status_effect_check(Character *c, Character *m, unsigned char turn_number) {
+	printf("");
+}
+
 /** Function called once each level when combat is in progress.
  *  c is the player character, m is the monster, and levelUpNumber is the 
  *	number of times the lvlUp function will be called when m is defeated.
@@ -780,6 +788,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			for(; levelUpNumber != 0; levelUpNumber--) {
 				lvlUp(c);
 			}
+			c->isTurn = true;
 			break;
 		}
 		bool isTurnChanged = c->isTurn;
@@ -788,15 +797,18 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			printf("%s has been defeated!\n", c->name);
 			free(m); free(c); exit(0);
 		}
+		/* want to make sure turn_number not incremented on help or other non-isTurn-changing instructions */
 		if(isTurnChanged != c->isTurn) {
 			turn_number++;
 			// printf("\n%d\n\n", turn_number);
 		}
 	}
 	free(m);
-	c->isTurn = true;
 }
-//@TODO fix issue with character knowing spells initially before learning any, knows L, b, and r at beginning of game
+void lvltest(Character *c) {
+
+}
+/* Floor 1 start */
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
 	printf("A forest of trees surrounds a clearing; it is here that a massive, four-floor mansion, stands."); pressEnter();
@@ -840,24 +852,68 @@ void lvl1(Character *c) {
 	Character *m = newCharacter(" appears!", KILLER_PLANT);
 	combat_sequence(c, m, 1);
 }
+/* Floor 2 start */
 void lvl2(Character *c) {
 	printf("%s droops to the ground, then magically shrinks back down to normal size.", MONSTER_NAMES[KILLER_PLANT]); pressEnter();
-	// item_or_spell_found(c, BLUE_POTION, "As %s droops to the ground, %s sees a potion!\n");
-
+	printf("Whoever spoke earlier is gone; there is only silence."); pressEnter();
+	printf("It is time to move on. Press enter to proceed up the stairs to the second floor."); pressEnter();
+	printf("A faded red carpet lines the stairs and continues into the dark hallway beyond."); pressEnter();
+	item_or_spell_found(c, BLUE_POTION, "Right at the top of the stairs is a potion!\n");
+	printf("%s is now surrounded by darkness, but notices a faint light coming from the right.", c->name); pressEnter();
+	printf(""); pressEnter();
+	bool isYes = yes_or_no("Follow the source of light?");
+	if(isYes) {
+		printf("%s turns right in an attempt to escape the darkness.", c->name); pressEnter();
+		printf("The light grows brighter as %s continues down the corridor."); pressEnter();
+		printf("%s enters the next room and is blinded by the light radiating from its center.", c->name); pressEnter();
+		item_or_spell_found(c, LIGHT_VIAL, "The light is coming from an item!\n");
+		printf("There is a door on the right side of the room. Press enter to exit the room."); pressEnter();
+	} else {
+		printf("%s opts to continue on the main path.", c->name); pressEnter();
+		printf("Walking forward, %s almost falls into a massive hole in the floor. It seems to have no bottom.", c->name); pressEnter();
+		isYes = yes_or_no("Jump into the hole?");
+		if(isYes) {
+			printf("%s jumps into the abyss but immediately lands on something soft... It's a sheep?", c->name); pressEnter();
+			printf("The sheep has wings, and majestically flies %s back to safety.", c->name); pressEnter();
+			item_or_spell_found(c, SUMMON_SHEEP, "The sheep has a magic scroll in its mouth!");
+			printf("The sheep disappears. %s is unsure if it was a hallucination or not.", c->name); pressEnter();
+		} else {
+			printf("%s makes the sensible decision not to jump into the hole.", c->name); pressEnter();
+		}
+		printf("Continuing on the path, %s notices a slight glimmer on the floor.", c->name); pressEnter();
+		printf("It's a huge claymore, unfortunately shattered and unusable."); pressEnter();
+		item_or_spell_found(c, TEARS, "Next to the sword is a vial of some liquid.\n");
+		printf("%s reaches a door at the end of the hallway. Press enter to open it.", c->name); pressEnter();
+	} //end else
+	drink_potion(c);
+	printf("Press enter to open the door and continue."); pressEnter();
+	printf("Immediately upon entering the room %s feels an unatural presence."); pressEnter();
+	printf("The room is ice cold, and a cold breeze blows the door shut!"); pressEnter();
+	printf("A mysterious figure appears floating above the ground. It wears a torn black cloak and wields a large scythe."); pressEnter();
 	Character *m = newCharacter(" appears!", WRAITH);
 	combat_sequence(c, m, 1);
 }
+/* Floor 3 start */
 void lvl3(Character *c) {
+	printf("%s mutters a name ")
 	Character *m = newCharacter(" appears!", MAD_WIZARD);
 	combat_sequence(c, m, 2);
 
 }
-void the_end(Character *c) {
+void lvl4(Character *c) {
 
 	Character *m = newCharacter(" appears!", GOLEM);
 	combat_sequence(c, m, 2);
 }
+/* Floor 4 start */
+void lvl5(Character *c) {
 
+	Character *m = newCharacter(" appears!", VAMPIRE_LORD);
+	combat_sequence(c, m, 2);
+}
+void the_end(Character *c) {
+
+}
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
 	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
