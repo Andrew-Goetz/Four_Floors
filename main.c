@@ -175,47 +175,32 @@ typedef struct Characters {
 	char name[MAX_INPUT_LENGTH];
 } Character;
 
-/** Creates a new player character, should only be called once */
-Character* newPlayerCharacter() {
+/** Creates a new character, some characters different than others. */
+Character* newCharacter(char message[], Enemy enemy) {
 	Character *c = malloc(sizeof(*c));
-	c->totalHealth = MONSTER_STATS[PLAYER][HEALTH];
-	c->totalMana = MONSTER_STATS[PLAYER][MANA];
+
+	c->health = MONSTER_STATS[enemy][HEALTH];
+	c->totalHealth = MONSTER_STATS[enemy][HEALTH];
+	c->mana = MONSTER_STATS[enemy][MANA];
+	c->totalMana = MONSTER_STATS[enemy][MANA];
+	c->attack = MONSTER_STATS[enemy][ATTACK];
+	c->defense = MONSTER_STATS[enemy][DEFENSE];
+
 	c->itemSlot = NOTHING;
 	c->potionSlot = NOTHING;
+	for(unsigned char i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = false;
+
 	c->effect = NONE;
 	c->effectDuration = 0;
 
-	c->health = MONSTER_STATS[0][HEALTH];
-	c->mana = MONSTER_STATS[0][MANA];
-	c->attack = MONSTER_STATS[0][ATTACK];
-	c->defense = MONSTER_STATS[0][DEFENSE];
-	c->isMonster = PLAYER;
-	c->isTurn = true; /* Controls turn for both characters, if false it's the monster's turn */
-	// for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = true; //for testing spells
-	for(int i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = false; //for testing spells
-	getInput(c->name, "Enter your traveler's name: ");
-	//printf("%s has %u health.\n", c->name, c->health);
-	//printf("%s has %u attack power.\n", c->name, c->attack);
+	c->isMonster = enemy;
+	if(enemy == PLAYER) {
+		getInput(c->name, "Enter your traveler's name: ");
+	} else {
+		strcpy(c->name, MONSTER_NAMES[enemy]);
+		printf("%s appears!\n", c->name);
+	}
 	return c;
-}
-
-/** Creates a new non-player character */
-Character* newCharacter(char message[], Enemy enemy) {
-	assert(enemy);
-	Character *m = malloc(sizeof(*m));
-	m->health = MONSTER_STATS[enemy][HEALTH];
-	m->totalHealth = MONSTER_STATS[enemy][HEALTH];
-	m->itemSlot = NOTHING;
-	m->potionSlot = NOTHING;
-
-	m->mana = MONSTER_STATS[enemy][MANA];
-	m->totalMana = MONSTER_STATS[enemy][MANA];
-	m->attack = MONSTER_STATS[enemy][ATTACK];
-	m->defense = MONSTER_STATS[enemy][DEFENSE];
-	m->isMonster = enemy;
-	strcpy(m->name, MONSTER_NAMES[enemy]);
-	printf("%s%s\n", m->name, message); /* message needs to start with a space character */
-	return m;
 }
 
 /** Increases the stat of the player's choice, should be called whenever a monster is defeated */
@@ -864,7 +849,7 @@ void lvl2(Character *c) {
 	bool isYes = yes_or_no("Follow the source of light?");
 	if(isYes) {
 		printf("%s turns right in an attempt to escape the darkness.", c->name); pressEnter();
-		printf("The light grows brighter as %s continues down the corridor."); pressEnter();
+		printf("The light grows brighter as %s continues down the corridor.", c->name); pressEnter();
 		printf("%s enters the next room and is blinded by the light radiating from its center.", c->name); pressEnter();
 		item_or_spell_found(c, LIGHT_VIAL, "The light is coming from an item!\n");
 		printf("There is a door on the right side of the room. Press enter to exit the room."); pressEnter();
@@ -887,7 +872,7 @@ void lvl2(Character *c) {
 	} //end else
 	drink_potion(c);
 	printf("Press enter to open the door and continue."); pressEnter();
-	printf("Immediately upon entering the room %s feels an unatural presence."); pressEnter();
+	printf("Immediately upon entering the room %s feels an unatural presence.", c->name); pressEnter();
 	printf("The room is ice cold, and a cold breeze blows the door shut!"); pressEnter();
 	printf("A mysterious figure appears floating above the ground. It wears a torn black cloak and wields a large scythe."); pressEnter();
 	Character *m = newCharacter(" appears!", WRAITH);
@@ -895,7 +880,7 @@ void lvl2(Character *c) {
 }
 /* Floor 3 start */
 void lvl3(Character *c) {
-	printf("%s mutters a name ")
+	// printf("%s mutters a name ");
 	Character *m = newCharacter(" appears!", MAD_WIZARD);
 	combat_sequence(c, m, 2);
 
@@ -916,7 +901,7 @@ void the_end(Character *c) {
 }
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
-	Character *c = newPlayerCharacter(); /* Player created in main, monsters in the lvl functions */
+	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions */
 	lvl0(c);
 	lvl1(c);
 	free(c);
