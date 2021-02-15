@@ -4,11 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #ifdef _WIN32
 	#include <windows.h>
 #elif __unix__
-	#include <time.h>   // for nanosleep
+	#include <time.h>
 #else
 	printf("Your operating system is not supported.\n");
 	exit(1);
@@ -781,7 +780,7 @@ void drink_potion(Character *c) {
 }
 
 void status_effect_check(Character *c, Character *m, unsigned char turn_number) {
-	printf("");
+	printf(" ");
 }
 
 /** Function called once each level when combat is in progress.
@@ -870,7 +869,6 @@ void lvl2(Character *c) {
 	printf("A faded red carpet lines the stairs and continues into the dark hallway beyond."); pressEnter();
 	item_or_spell_found(c, BLUE_POTION, "Right at the top of the stairs is a potion!\n");
 	printf("%s is now surrounded by darkness, but notices a faint light coming from the right.", c->name); pressEnter();
-	printf(""); pressEnter();
 	bool isYes = yes_or_no("Follow the source of light?");
 	if(isYes) {
 		printf("%s turns right in an attempt to escape the darkness.", c->name); pressEnter();
