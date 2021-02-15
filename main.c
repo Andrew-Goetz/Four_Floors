@@ -1,27 +1,24 @@
-#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy, I want it for linux compatibility in future */
+#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy for linux compatibility */
 #include <assert.h>
 #include <stdbool.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-//#include <unistd.h>
-#include <windows.h>
-/* sleep() from unistd.h and _stricmp() from string.h are non-portable for other OSes */
+#ifdef _WIN32
+	#include <windows.h>
+#elif __unix__
+	#include <time.h>   // for nanosleep
+#else
+	printf("Your operating system is not supported.\n");
+	exit(1);
+#endif
 
-//#ifdef _WINDOWS
-//#include <windows.h>
-//#define _stricmp _stricmp
-//#define sleep Sleep
-//#else
-//#include <unistd.h>
-//#endif
 /*********** Constants ************/
-
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5
 #define MONSTERS_IN_GAME 7 /* Includes player character */
-#define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever Sleep is called */
+#define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
 
 /* Below goes in order: health, mana, attack, defense */
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
@@ -59,12 +56,15 @@ typedef enum ENEMY_TYPES {
 typedef enum STATUS_EFFECTS { /* Many relate to spells/items below */
 	/* None(0) is the default status effect */
 	NONE,
-	/*  */
+	/* Harmful Effects */
 	STUN,
 	POISON,
-	DRAINED,
+	DRAIN,
+	/* Positive Effects */
 	DEFENSE_UP,
-	ATTACK_UP
+	ATTACK_AND_HEALTH_UP,
+	TEARS_ACTIVE,
+	BRAND_ACTIVE
 } Effect;
 
 typedef enum ITEMS_AND_SPELLS {
@@ -106,8 +106,8 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"The magic of the flagellants.\n When used, the enemy is instantly defeated, but the health of the caster is reduced to 1.\n",
 	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n",
 
-	"A red, slimey liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n",
-	"A red, slimey liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.\n",
+	"A red, slimy liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n",
+	"A red, slimy liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.\n",
 	"A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.\n",
 	"A blue, cold liquid. Even thicker than the regular potion.\nRestores 5 mana when used.\n",
 	"The cure-all spoken of in ancient legends. The potion glimmers a brilliant gold.\nRemoves any negative status effects, such as poison.\n",
@@ -118,6 +118,33 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.\n",
 	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods.\n"
 };
+
+/* https://code-examples.net/en/q/11a859 (slightly altered version) cross platform sleep */
+void sleep_ms(int milliseconds) {
+	#ifdef _WIN32
+	    Sleep(milliseconds);
+	#elif __unix__
+	    struct timespec ts;
+	    ts.tv_sec = milliseconds / 1000;
+	    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+	    nanosleep(&ts, NULL);
+	#else
+		printf("An error has occurred, your operating system may not be supported.");
+		exit(1);
+	#endif
+}
+
+/* Cross platform strcasecmp/_stricmp */
+int case_compare(const char *word1, const char *word2) {
+	#ifdef _WIN32
+		return _stricmp(word1, word2);
+	#elif __unix__
+		return strcasecmp(word1, word2);
+	#else
+		printf("An error has occurred, your operating system may not be supported.");
+		exit(1);
+	#endif
+}
 
 /** Call to get input, formats to get rid of trailing \n if it exists */
 void getInput(char input[], char message[]) {
@@ -146,9 +173,9 @@ bool yes_or_no(char message[]) {
 	printf("%s", message); /* assumes message will end with \n */
 	while(true) {
 		getInput(input, "Yes(y) or No(n): ");
-		if(_stricmp(input, "yes") == 0 || _stricmp(input, "y") == 0) { //|| _stricmp(input, "\n") == 0) { /* \n works too for yes */
+		if(case_compare(input, "yes") == 0 || case_compare(input, "y") == 0) {
 			return true;
-		} else if(_stricmp(input, "no") == 0 || _stricmp(input, "n") == 0) {
+		} else if(case_compare(input, "no") == 0 || case_compare(input, "n") == 0) {
 			return false;
 		} else {
 			printf("Invalid input.\n");
@@ -210,19 +237,19 @@ void lvlUp(Character *c) {
 	char input[MAX_INPUT_LENGTH];
 	while(true) {
 		getInput(input, ">> ");
-		if(_stricmp(input, "health") == 0 || _stricmp(input, "h") == 0) {
+		if(case_compare(input, "health") == 0 || case_compare(input, "h") == 0) {
 			c->totalHealth++; c->health++;
 			printf("%s feels healthier.\n", c->name);
 			return;
-		} else if(_stricmp(input, "mana") == 0 || _stricmp(input, "m") == 0) {
+		} else if(case_compare(input, "mana") == 0 || case_compare(input, "m") == 0) {
 			c->totalMana++; c->mana++;
 			printf("%s feels more intelligent.\n", c->name);
 			return;
-		} else if(_stricmp(input, "attack") == 0 || _stricmp(input, "a") == 0) {
+		} else if(case_compare(input, "attack") == 0 || case_compare(input, "a") == 0) {
 			c->attack++;
 			printf("%s feels more powerful.\n", c->name);
 			return;
-		} else if(_stricmp(input, "defense") == 0 || _stricmp(input, "d") == 0) {
+		} else if(case_compare(input, "defense") == 0 || case_compare(input, "d") == 0) {
 			c->defense++;
 			printf("%s feels stronger.\n", c->name);
 			return;
@@ -239,7 +266,7 @@ void lvlUp(Character *c) {
  */
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
@@ -311,7 +338,7 @@ void help() {
 			"\tcast(c)\t\tcast spell, ending turn\n"
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n");
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	bool isYes = yes_or_no("Output additional game information?\n");
 	if(isYes) {
 		printf("Additional information:\n"
@@ -340,7 +367,7 @@ void red_potion(Character *c, bool isGreater) {
 		healVal = 3;
 	}
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	if(c->health + healVal >= c->totalHealth) {
 		c->health = c->totalHealth;
 		printf("%s is now full health.\n", c->name);
@@ -358,7 +385,7 @@ void blue_potion(Character *c, bool isGreater) {
 		manaVal = 3;
 	}
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	if(c->mana + manaVal >= c->totalMana) {
 		c->mana = c->totalMana;
 		printf("%s is now full mana.\n", c->name);
@@ -370,7 +397,7 @@ void blue_potion(Character *c, bool isGreater) {
 
 void panacea(Character *c) {
 	printf("%s drinks the %s. It tastes incredible.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	//@TODO whenever status afflictions are implemented, remove only harmful afflictions
 }
 
@@ -418,7 +445,7 @@ void iron_pellet(Character *c) {
 
 void demon_fire(Character *user, Character *c) {
 	printf("%s throws a %s at %s, making the room erupt in flames.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	if(c->isMonster == KILLER_PLANT) {
 		const char DEMON_FIRE_DAMAGE = c->totalHealth; //gets oneshot
 		c->health -= DEMON_FIRE_DAMAGE;
@@ -479,7 +506,7 @@ void useItem(Character *c, Character *m) {
 /***** Spell Functions *****/
 void fireball(Character *caster, Character *c) {
 	printf("%s casts fireball!\n", caster->name);
-	Sleep(SLEEP_DURATION);
+	sleep_ms(SLEEP_DURATION);
 	if(c->isMonster == KILLER_PLANT) {
 		const char FIREBALL_DAMAGE = 7;
 		c->health -= FIREBALL_DAMAGE;
@@ -553,19 +580,19 @@ void castSpell(Character *c, Character *m) {
 		char input[MAX_INPUT_LENGTH];
 		while(true) {
 			getInput(input, ">> ");
-			if(c->knowSpell[0] && (_stricmp(input, "Fireball") == 0 || _stricmp(input, "f") == 0)) {
+			if(c->knowSpell[0] && (case_compare(input, "Fireball") == 0 || case_compare(input, "f") == 0)) {
 				fireball(c, m);
 				break;
-			} else if(c->knowSpell[1] && (_stricmp(input, "Lightning Stake") == 0 || _stricmp(input, "L") == 0)) {
+			} else if(c->knowSpell[1] && (case_compare(input, "Lightning Stake") == 0 || case_compare(input, "L") == 0)) {
 				lightning_stake(c, m);
 				break;
-			} else if(c->knowSpell[2] && (_stricmp(input, "Summon Sheep") == 0 || _stricmp(input, "s") == 0)) {
+			} else if(c->knowSpell[2] && (case_compare(input, "Summon Sheep") == 0 || case_compare(input, "s") == 0)) {
 				summon_sheep(c, m);
 				break;
-			} else if(c->knowSpell[3] && (_stricmp(input, "Sacrificial Brand") == 0 || _stricmp(input, "b") == 0)) {
+			} else if(c->knowSpell[3] && (case_compare(input, "Sacrificial Brand") == 0 || case_compare(input, "b") == 0)) {
 				sacrificial_brand(c, m);
 				break;
-			} else if(c->knowSpell[4] && (_stricmp(input, "Frost Resonance") == 0 || _stricmp(input, "r") == 0)) {
+			} else if(c->knowSpell[4] && (case_compare(input, "Frost Resonance") == 0 || case_compare(input, "r") == 0)) {
 				frost_resonance(c, m);
 				break;
 			} else {
@@ -574,7 +601,7 @@ void castSpell(Character *c, Character *m) {
 		}
 	} else {
 		printf("%s tries to cast magic, but doesn't know how. %s chuckles.\n", c->name, m->name);
-		Sleep(SLEEP_DURATION);
+		sleep_ms(SLEEP_DURATION);
 	}
 	c->isTurn = false;
 }
@@ -602,47 +629,47 @@ void actions(Character *c, Character *m) {
 	while(true) {
 		getInput(input, ">> ");
 		/* help(h): lists out possible commands and then asks if user wants more in depth information */
-		if(_stricmp(input, "help") == 0 || _stricmp(input, "h") == 0) {
+		if(case_compare(input, "help") == 0 || case_compare(input, "h") == 0) {
 			help();
 			return;
 		}
 		/* status(s): outputs current player status */
-		if(_stricmp(input, "status") == 0 || _stricmp(input, "s") == 0) {
+		if(case_compare(input, "status") == 0 || case_compare(input, "s") == 0) {
 			status(c);
 			return;
 		}
 		/* enemy(e): outputs non-player-character's status, a help fight him */
-		if(_stricmp(input, "enemy") == 0 || _stricmp(input, "e") == 0) {
+		if(case_compare(input, "enemy") == 0 || case_compare(input, "e") == 0) {
 			enemyStatus(m);
 			return;
 		}
 		/* attack(a): calls meleeAttack */
-		else if(_stricmp(input, "attack") == 0 || _stricmp(input, "a") == 0) {
+		else if(case_compare(input, "attack") == 0 || case_compare(input, "a") == 0) {
 			meleeAttack(c, m);
 			return;
 		}
 		/* potion(p): use potion item currently in player's potionSlot */
-		else if(_stricmp(input, "potion") == 0 || _stricmp(input, "p") == 0) {
+		else if(case_compare(input, "potion") == 0 || case_compare(input, "p") == 0) {
 			usePotion(c, true);
 		}
 		/* item(i): use item currently in player's itemSlot */
-		else if(_stricmp(input, "item") == 0 || _stricmp(input, "i") == 0) {
+		else if(case_compare(input, "item") == 0 || case_compare(input, "i") == 0) {
 			useItem(c, m);
 			return;
 		}
 		/* cast(c): cast whatever magic is in player's magic slot */
-		else if(_stricmp(input, "cast") == 0 || _stricmp(input, "c") == 0) {
+		else if(case_compare(input, "cast") == 0 || case_compare(input, "c") == 0) {
 			castSpell(c, m);
 			return;
 		}
 		/* wait(w): do nothing */
-		else if(_stricmp(input, "wait") == 0 || _stricmp(input, "w") == 0) {
+		else if(case_compare(input, "wait") == 0 || case_compare(input, "w") == 0) {
 			wait(c);
 			return;
 		}
 		/* escape(exit): exits the program */
 		/* shortcut is "exit" instead of "e" to avoid accidental exits */
-		else if(_stricmp(input, "escape") == 0 || _stricmp(input, "exit") == 0) {
+		else if(case_compare(input, "escape") == 0 || case_compare(input, "exit") == 0) {
 			escape(c, m);
 			exit(0);
 		}
@@ -656,7 +683,7 @@ void actions(Character *c, Character *m) {
 /** When not the players turn, the monster does something: as of right now, it will always attack */
 void monsterAction(Character *m, Character *c) {
 	if(!c->isTurn) {
-		Sleep(SLEEP_DURATION);
+		sleep_ms(SLEEP_DURATION);
 		meleeAttack(m, c);
 	}
 	c->isTurn = true;
@@ -790,9 +817,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	}
 	free(m);
 }
-void lvltest(Character *c) {
 
-}
 /* Floor 1 start */
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
@@ -881,20 +906,33 @@ void lvl2(Character *c) {
 /* Floor 3 start */
 void lvl3(Character *c) {
 	// printf("%s mutters a name ");
+	printf("\"You will pay for this!\" This voice... it's the same voice as on the second floor!"); pressEnter();
+	printf("The old man who steps forward wears a wizard's hat, and has a crazy look in his eye."); pressEnter();
 	Character *m = newCharacter(" appears!", MAD_WIZARD);
 	combat_sequence(c, m, 2);
 
 }
 void lvl4(Character *c) {
+	bool isYes = yes_or_no("");
+	if(isYes) {
 
+	} else {
+
+	}
+	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue?");
+	if(isYes) {
+		item_or_spell_found(c, SACRIFICIAL_BRAND, "");
+	}
 	Character *m = newCharacter(" appears!", GOLEM);
 	combat_sequence(c, m, 2);
 }
 /* Floor 4 start */
 void lvl5(Character *c) {
-
+	// printf("%s crumbles into pieces."); pressEnter();
+	item_or_spell_found(c, GREATER_BLUE_POTION, "Among the pieces is a potion!");
+	printf("At the end of the room lies a foreboding pair of black doors. Press enter to open them."); pressEnter();
 	Character *m = newCharacter(" appears!", VAMPIRE_LORD);
-	combat_sequence(c, m, 2);
+	combat_sequence(c, m, 0); //last fight so no level ups needed
 }
 void the_end(Character *c) {
 
