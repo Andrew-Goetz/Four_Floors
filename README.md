@@ -15,4 +15,4 @@ Install gcc with package manager of choice; for ubuntu this is:
 `sudo apt install gcc`.
 Once installed, navigate to the downloaded directory and run:
 `gcc main.c -o four-floors-linux`.
-Then, run the executable with ./four-floors-linux.
+Then, run the executable with `./four-floors-linux`.
