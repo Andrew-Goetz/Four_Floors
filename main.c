@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy for linux compatibility */
+#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy, for linux compatibility */
 #include <assert.h>
 #include <stdbool.h> 
 #include <stdio.h>
@@ -9,15 +9,28 @@
 #elif __unix__
 	#include <time.h>
 #else
-	printf("Your operating system is not supported.\n");
+	printf("Your operating system is not supported. The program will now exit.\n");
 	exit(1);
 #endif
 
 /*********** Constants ************/
 #define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
-#define SPELLS_IN_GAME 5
-#define MONSTERS_IN_GAME 7 /* Includes player character */
+#define SPELLS_IN_GAME 5 /* Number of spells in the game */
+#define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
 #define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
+
+/* Some color stuff from https://stackoverflow.com/a/3219471 */
+#define C_RED     "\x1b[31m"
+#define C_GREEN   "\x1b[32m"
+#define C_YELLOW  "\x1b[33m"
+#define C_BLUE    "\x1b[34m"
+#define C_PURPLE  "\x1b[35m"
+#define C_CYAN    "\x1b[36m"
+#define C_RESET   "\x1b[0m"
+
+static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
+	"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
+};
 
 /* Below goes in order: health, mana, attack, defense */
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
@@ -28,10 +41,6 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Mad Wizard */ 		7, 5, 1, 0, /* Immune to magic, casts a lot of spells */
 	/* Wizard's Golem */ 	10, 0, 4, 3, /* All physical damage so iron pellet good against him */
 	/* Vampire Lord */		9, 3, 4, 2
-};
-
-static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
-	"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
 };
 
 /* To make accessing above array less annoying */
@@ -52,7 +61,7 @@ typedef enum ENEMY_TYPES {
 	VAMPIRE_LORD
 } Enemy;
 
-typedef enum STATUS_EFFECTS { /* Many relate to spells/items below */
+typedef enum STATUS_EFFECTS {
 	/* None(0) is the default status effect */
 	NONE,
 	/* Harmful Effects */
@@ -170,7 +179,7 @@ void pressEnter() {
 bool yes_or_no(char message[]) {
 	char input[MAX_INPUT_LENGTH];
 	printf("%s", message); /* assumes message will end with \n */
-	while(true) {
+	for(;;) {
 		getInput(input, "Yes(y) or No(n): ");
 		if(case_compare(input, "yes") == 0 || case_compare(input, "y") == 0) {
 			return true;
@@ -221,7 +230,14 @@ Character* newCharacter(char message[], Enemy enemy) {
 
 	c->isMonster = enemy;
 	if(enemy == PLAYER) {
-		getInput(c->name, "Enter your traveler's name: ");
+		getInput(c->name, "Enter your name: ");
+		printf("Your name is " C_BLUE "\'%s\'. " C_RESET, c->name);
+		bool isYes = yes_or_no("Is this correct?\n");
+		while(!isYes) {
+			getInput(c->name, "Enter your name: ");
+			printf("Your name is \'" C_BLUE "%s" C_RESET "\' ", c->name);
+			bool isYes = yes_or_no("Is this correct?");
+		}
 	} else {
 		strcpy(c->name, MONSTER_NAMES[enemy]);
 		printf("%s appears!\n", c->name);
@@ -234,7 +250,7 @@ void lvlUp(Character *c) {
 	assert(!c->isMonster);
 	printf("Level up avaliable!\nLevel health(h), mana(m), attack(a), or defense(d)?\n");
 	char input[MAX_INPUT_LENGTH];
-	while(true) {
+	for(;;) {
 		getInput(input, ">> ");
 		if(case_compare(input, "health") == 0 || case_compare(input, "h") == 0) {
 			c->totalHealth++; c->health++;
@@ -317,7 +333,7 @@ void enemyStatus(Character *m) {
 		"has a large scar across its hairy chest. It must be weak to physical attacks!\n", /* The Beast */
 		"seems vulnerable to fire.\n", /* The Killer Plant */
 		"is a creature of the night. The sun's rays would prove fatal.\n", /* The Wraith */
-		"is a powerful wizard, yet also an old man. melee attacks would be powerful against him.\n", /* The Wizard */
+		"is a powerful wizard, and magic would have no effect against him.\n", /* The Wizard */
 		"is an unthinking creature of destruction; attacking with massive physical blows, defense must be powerful against it!\n", /* The Wizard's Golem */
 		"is the ultimate foe. He has no obvious weakness weakness.\n" /* The Vampire Lord */
 	};
@@ -397,7 +413,9 @@ void blue_potion(Character *c, bool isGreater) {
 void panacea(Character *c) {
 	printf("%s drinks the %s. It tastes incredible.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
 	sleep_ms(SLEEP_DURATION);
-	//@TODO whenever status afflictions are implemented, remove only harmful afflictions
+	c->health = c->totalHealth;
+	c->mana = c->totalMana;
+	printf("All health and mana are restored.\n");
 }
 
 /** Use potion in potionSlot */
@@ -577,7 +595,7 @@ void castSpell(Character *c, Character *m) {
 		}
 		printf("\n");
 		char input[MAX_INPUT_LENGTH];
-		while(true) {
+		for(;;) {
 			getInput(input, ">> ");
 			if(c->knowSpell[0] && (case_compare(input, "Fireball") == 0 || case_compare(input, "f") == 0)) {
 				fireball(c, m);
@@ -625,7 +643,7 @@ void escape(Character *c, Character *m) {
 void actions(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char input[MAX_INPUT_LENGTH];
-	while(true) {
+	for(;;) {
 		getInput(input, ">> ");
 		/* help(h): lists out possible commands and then asks if user wants more in depth information */
 		if(case_compare(input, "help") == 0 || case_compare(input, "h") == 0) {
@@ -779,8 +797,9 @@ void drink_potion(Character *c) {
 	}
 }
 
+/* Handles status effects */
 void status_effect_check(Character *c, Character *m, unsigned char turn_number) {
-	printf(" ");
+
 }
 
 /** Function called once each level when combat is in progress.
@@ -792,7 +811,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	assert(!c->isMonster && m->isMonster);
 	unsigned char turn_number = 0;
 	bool isTurnChanged;
-	while(true) {
+	for(;;) {
 		actions(c, m);
 		if(m->health <= 0) {
 			printf("VICTORY!\n");
@@ -820,15 +839,16 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 /* Floor 1 start */
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
-	printf("A forest of trees surrounds a clearing; it is here that a massive, four-floor mansion, stands."); pressEnter();
-	printf("%s wonders: what might lie on the fourth floor?", c->name); pressEnter();
-	printf("%s reaches the massive front doors of the mansion.\n", c->name);
+	printf("A" C_GREEN " forest of trees " C_RESET "surrounds a clearing; it is here that a massive,"
+	       C_RED " four-floor mansion " C_RESET "towers above the forest."); pressEnter();
+	printf(C_BLUE "%s " C_RESET "wonders: what might lie on the fourth floor?", c->name); pressEnter();
+	printf(C_BLUE "%s " C_RESET "reaches the massive front doors of the mansion.\n", c->name);
 	bool isYes = yes_or_no("Enter the mansion, beginning a perilous journey?\n");
 	if(!isYes) {
-		printf("Intimidated by the mansion, %s turns around and heads home. Maybe it's for the best.\n", c->name);
+		printf("Intimidated by the mansion," C_BLUE " %s " C_RESET "turns around and heads home. Maybe it's for the best.\n", c->name);
 		free(c); exit(0);
 	}
-	printf("The doors creak open. %s enters the mansion.", c->name); pressEnter();
+	printf("The doors creak open." C_BLUE " %s " C_RESET "enters the mansion.", c->name); pressEnter();
 	printf("Light streams into the mansion, revealing the dust floating in the air."); pressEnter();
 	printf("SLAM! The door closes behind %s!", c->name); pressEnter();
 	printf("%s turns and hears unnatural growls.", c->name); pressEnter();
@@ -903,7 +923,6 @@ void lvl2(Character *c) {
 }
 /* Floor 3 start */
 void lvl3(Character *c) {
-	// printf("%s mutters a name ");
 	printf("\"You will pay for this!\" This voice... it's the same voice as on the second floor!"); pressEnter();
 	printf("The old man who steps forward wears a wizard's hat, and has a crazy look in his eye."); pressEnter();
 	Character *m = newCharacter(" appears!", MAD_WIZARD);
@@ -911,6 +930,9 @@ void lvl3(Character *c) {
 
 }
 void lvl4(Character *c) {
+	printf("%s mutters a name in his dying breath: \"Elizabeth...\"", MONSTER_NAMES[MAD_WIZARD]); pressEnter();
+	printf("Behind him, %s sees a number of books, undoubtably written by the deceased man. Press enter to read a few.", c->name); pressEnter();
+	printf(" "); pressEnter();
 	bool isYes = yes_or_no("");
 	if(isYes) {
 
@@ -928,16 +950,33 @@ void lvl4(Character *c) {
 void lvl5(Character *c) {
 	// printf("%s crumbles into pieces."); pressEnter();
 	item_or_spell_found(c, GREATER_BLUE_POTION, "Among the pieces is a potion!");
-	printf("At the end of the room lies a foreboding pair of black doors. Press enter to open them."); pressEnter();
-	Character *m = newCharacter(" appears!", VAMPIRE_LORD);
+	printf("Suddenly, a bookshelf on the far wall slides aside, revealing stairs to the fourth floor!");
+
+	printf("Press enter to climb the stairs to the fourth floor the mansion."); pressEnter();
+	printf("At the end of the hall lies a foreboding pair of black doors. Press enter to open them."); pressEnter();
+	printf("The next room is extravagantly decorated; stained glass windows adorn the walls, and a cloaked figure sits upon a magnificent throne."); pressEnter();
+	printf("He rises slowly from his throne, his crimson-red eyes striking fear into %s's heart.", c->name); pressEnter();
+	printf("His sharp teeth make it clear he is a vampire. %s imagines the red liquid in his cup is not wine.", c->name); pressEnter();
+	printf("The vampire clears his throat and speaks: \"You have done well to come this far, and for that you deserve my respect.\""); pressEnter();
+	printf("\"Therefore, I will give you one last chance, %s. Leave this place, or I will kill you. Your death is guaranteed if you stay.\"", c->name); pressEnter();
+	bool isYes = yes_or_no("Take the vampire up on his offer and leave the mansion?");
+	if(isYes) {
+		printf("\"Hahaha, I always expected you would be a coward. Now, leave me be and vanish, before I change my mind\""); pressEnter();
+		printf("With that, %s leaves the vampire's throne room in shame.\n", c->name); pressEnter();
+		printf("Press enter to admit failure and leave the mansion."); pressEnter();
+		free(c); exit(0);
+	}
+	printf("\"You fool! You dare think you can challenge me, Lord of all Vampires? You boast, %s, and unduely so.\"", c->name); pressEnter();
+	Character *m = newCharacter(" tears off his cloak, unsheaths a rapier, and growls.", VAMPIRE_LORD);
+	printf("\"Your move, %s.\"", c->name);
 	combat_sequence(c, m, 0); //last fight so no level ups needed
 }
 void the_end(Character *c) {
-
+	printf(" ");
 }
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
-	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions */
+	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions @TODO change to combat_sequence */
 	lvl0(c);
 	lvl1(c);
 	free(c);

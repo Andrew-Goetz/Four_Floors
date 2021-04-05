@@ -10,8 +10,8 @@ To compile with clang, navigate to the downloaded directory and run:
 Then, run the .exe with `.\four-floors.exe` or just open it from file explorer.
 
 ## Linux
-Clang can work for linux as well, but gcc works as well.
-Install gcc with package manager of choice; for ubuntu this is:
+Clang can work for linux as well, but gcc is also tested and is likely already on your system.
+Install gcc with package manager of choice; for ubuntu/debian this is:
 `sudo apt install gcc`.
 Once installed, navigate to the downloaded directory and run:
 `gcc main.c -o four-floors-linux`.
