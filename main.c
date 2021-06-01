@@ -231,12 +231,12 @@ Character* newCharacter(char message[], Enemy enemy) {
 	c->isMonster = enemy;
 	if(enemy == PLAYER) {
 		getInput(c->name, "Enter your name: ");
-		printf("Your name is " C_BLUE "\'%s\'. " C_RESET, c->name);
+		printf("Your name is " C_BLUE "\'%s\'" C_RESET ". ", c->name);
 		bool isYes = yes_or_no("Is this correct?\n");
 		while(!isYes) {
 			getInput(c->name, "Enter your name: ");
-			printf("Your name is \'" C_BLUE "%s" C_RESET "\' ", c->name);
-			bool isYes = yes_or_no("Is this correct?");
+			printf("Your name is " C_BLUE "\'%s\'" C_RESET ". ", c->name);
+			isYes = yes_or_no("Is this correct?\n");
 		}
 	} else {
 		strcpy(c->name, MONSTER_NAMES[enemy]);
@@ -325,8 +325,10 @@ void status(Character *c) {
 	}
 }
 
-/** Output status of enemy character, calls status */
-void enemyStatus(Character *m) {
+/** Output status of enemy character, calls status.
+ *  Passes in player character as well to ensure player doesn't lose a turn.
+ */
+void enemyStatus(Character *c, Character *m) {
 	assert(m->isMonster);
 	static const char *MONSTER_HINTS[MONSTERS_IN_GAME] = {
 		"ERROR\n", /* Character gets no hint */
@@ -339,6 +341,7 @@ void enemyStatus(Character *m) {
 	};
 	status(m);
 	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //prints out hints/descriptions here
+	c->isTurn = true;
 }
 
 /** Output help info */
@@ -657,7 +660,7 @@ void actions(Character *c, Character *m) {
 		}
 		/* enemy(e): outputs non-player-character's status, a help fight him */
 		if(case_compare(input, "enemy") == 0 || case_compare(input, "e") == 0) {
-			enemyStatus(m);
+			enemyStatus(c, m);
 			return;
 		}
 		/* attack(a): calls meleeAttack */
@@ -829,8 +832,12 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 		}
 		/* want to make sure turn_number not incremented on help or other non-isTurn-changing instructions */
 		if(isTurnChanged != c->isTurn) {
+			if(turn_number == 255) {
+				printf("%s after so long fighting, %s collapses in exhaustion. Defeat!", c->name, c->name);
+				free(m); free(c); exit(0);
+			}
 			turn_number++;
-			// printf("\n%d\n\n", turn_number);
+			printf("\n%d\n\n", turn_number);
 		}
 	}
 	free(m);
@@ -963,20 +970,20 @@ void lvl5(Character *c) {
 	if(isYes) {
 		printf("\"Hahaha, I always expected you would be a coward. Now, leave me be and vanish, before I change my mind\""); pressEnter();
 		printf("With that, %s leaves the vampire's throne room in shame.\n", c->name); pressEnter();
-		printf("Press enter to admit failure and leave the mansion."); pressEnter();
+		printf("Press enter to admit defeat and leave the mansion."); pressEnter();
 		free(c); exit(0);
 	}
-	printf("\"You fool! You dare think you can challenge me, Lord of all Vampires? You boast, %s, and unduely so.\"", c->name); pressEnter();
+	printf("\"You fool! You dare think you can challenge me, Lord of All Vampires? You boast, %s, and unduely so.\"", c->name); pressEnter();
 	Character *m = newCharacter(" tears off his cloak, unsheaths a rapier, and growls.", VAMPIRE_LORD);
 	printf("\"Your move, %s.\"", c->name);
-	combat_sequence(c, m, 0); //last fight so no level ups needed
+	combat_sequence(c, m, 0); // last fight so no level ups needed
 }
 void the_end(Character *c) {
 	printf(" ");
 }
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
-	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions @TODO change to combat_sequence */
+	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions */
 	lvl0(c);
 	lvl1(c);
 	free(c);
