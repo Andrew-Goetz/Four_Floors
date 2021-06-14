@@ -801,7 +801,8 @@ void drink_potion(Character *c) {
 }
 
 /* Handles status effects */
-void status_effect_check(Character *c, Character *m, unsigned char turn_number) {
+/* For now, applying a status effect when another is active will overwrite that status effect */
+void status_effect_check(Character *c, unsigned char turn_number) {
 
 }
 
@@ -813,6 +814,7 @@ void status_effect_check(Character *c, Character *m, unsigned char turn_number) 
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	assert(!c->isMonster && m->isMonster);
 	unsigned char turn_number = 0;
+	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
 	for(;;) {
 		actions(c, m);
@@ -847,12 +849,13 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
 	printf("A" C_GREEN " forest of trees " C_RESET "surrounds a clearing; it is here that a massive,"
-	       C_RED " four-floor mansion " C_RESET "towers above the forest."); pressEnter();
+			C_RED " four-floor mansion " C_RESET "towers above the forest."); pressEnter();
 	printf(C_BLUE "%s " C_RESET "wonders: what might lie on the fourth floor?", c->name); pressEnter();
 	printf(C_BLUE "%s " C_RESET "reaches the massive front doors of the mansion.\n", c->name);
 	bool isYes = yes_or_no("Enter the mansion, beginning a perilous journey?\n");
 	if(!isYes) {
-		printf("Intimidated by the mansion," C_BLUE " %s " C_RESET "turns around and heads home. Maybe it's for the best.\n", c->name);
+		printf("Intimidated by the mansion," C_BLUE " %s " C_RESET "turns around and heads home. "
+				"Maybe it's for the best.\n", c->name);
 		free(c); exit(0);
 	}
 	printf("The doors creak open." C_BLUE " %s " C_RESET "enters the mansion.", c->name); pressEnter();
@@ -882,7 +885,8 @@ void lvl1(Character *c) {
 		printf("The door is charred black; despite this, %s manages to force it open.", c->name); pressEnter();
 	}
 	printf("In the next room, %s sees a staircase. This must lead to the second floor!", c->name); pressEnter();
-	printf("The distant voice of an elderly man echoes mysteriously in the distance: \"Begone from this place, stranger!\""); pressEnter();
+	printf("The distant voice of an elderly man echoes mysteriously in the distance: "
+			"\"Begone from this place, stranger!\""); pressEnter();
 	printf("Suddenly, a magical glow fills the air, and a massive plant grows rapidly out of the ground."); pressEnter();
 	printf("It resembles a Venus flytrap, only 100 times the size!"); pressEnter();
 	Character *m = newCharacter(" appears!", KILLER_PLANT);
@@ -905,7 +909,8 @@ void lvl2(Character *c) {
 		printf("There is a door on the right side of the room. Press enter to exit the room."); pressEnter();
 	} else {
 		printf("%s opts to continue on the main path.", c->name); pressEnter();
-		printf("Walking forward, %s almost falls into a massive hole in the floor. It seems to have no bottom.", c->name); pressEnter();
+		printf("Walking forward, %s almost falls into a massive hole in the floor. "
+				"It seems to have no bottom.", c->name); pressEnter();
 		isYes = yes_or_no("Jump into the hole?");
 		if(isYes) {
 			printf("%s jumps into the abyss but immediately lands on something soft... It's a sheep?", c->name); pressEnter();
