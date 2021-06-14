@@ -159,13 +159,13 @@ int case_compare(const char *word1, const char *word2) {
 /** Call to get input, formats to get rid of trailing \n if it exists */
 void getInput(char input[], char message[]) {
 	printf("%s", message);
-	if(fgets(input, MAX_INPUT_LENGTH, stdin) != 's') {
-		printf("An error has occurred, fgets() did not return \'s\'.\n");
+	if(fgets(input, MAX_INPUT_LENGTH, stdin) == NULL) {
+		printf("An error has occurred, fgets() returned NULL.\n");
 	}
 	assert(strlen(input) > 0);
 	if(input[strlen(input)-1] == '\n') { // For proper line spacing
 		input[strlen(input)-1] = '\0';
-		printf("Hi\n");
+		//printf("Hi\n");
 	}
 	//@TODO better handling of if input is > MAX_INPUT_LENGTH
 }
@@ -551,8 +551,8 @@ void lightning_stake(Character *caster, Character *c) {
 
 /* One in a hundred chance of sheep exploading, dealing SHEEP_DAMAGE damage. */
 void summon_sheep(Character *caster, Character *c) {
-	//char sheep_explosion = rand() % 100;
-	char sheep_explosion = rand() % 2;
+	char sheep_explosion = rand() % 100;
+	//char sheep_explosion = 0;
 	printf("%s summons a sheep!\n", caster->name);
 	sleep_ms(SLEEP_DURATION);
 	if(sheep_explosion == 0) { //sheep explodes
@@ -760,7 +760,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 				printf("Ok then.\n");
 			}
 			break;
-		/* for potions, offer to use item in inventory and take new item */
+		/* for potions, offer to use item in inventory and take new item @TODO this may not be working rn? */
 		case RED_POTION: case GREATER_RED_POTION: case BLUE_POTION:	case GREATER_BLUE_POTION: case PANACEA:
 			printf("Add %s to potion inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
 			if(!c->potionSlot) {
@@ -810,6 +810,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			printf("Something goes wrong. It must have been an illusion!\n");
 	}
 }
+
 /** Quick function that asks if player wants to drink potion inbetween battles. */
 void drink_potion(Character *c) {
 	printf("%s looks around and sees no enemies; safety, for the time being.", c->name); pressEnter();
@@ -866,7 +867,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 				free(m); free(c); exit(0);
 			}
 			turn_number++;
-			printf("\n%d\n\n", turn_number);
+			//printf("\n%d\n\n", turn_number);
 		}
 	}
 	free(m);
@@ -995,13 +996,13 @@ void lvl5(Character *c) {
 	printf("At the end of the hall lies a foreboding pair of black doors. Press enter to open them."); pressEnter();
 	printf("The next room is extravagantly decorated; stained glass windows adorn the walls, and a cloaked figure sits upon a magnificent throne."); pressEnter();
 	printf("He rises slowly from his throne, his crimson-red eyes striking fear into %s's heart.", c->name); pressEnter();
-	printf("His sharp teeth make it clear he is a vampire. %s imagines the red liquid in his cup is not wine.", c->name); pressEnter();
+	printf("His sharp teeth make it clear he is a vampire. %s thinks the red liquid in his cup may not be wine.", c->name); pressEnter();
 	printf("The vampire clears his throat and speaks: \"You have done well to come this far, and for that you deserve my respect.\""); pressEnter();
 	printf("\"Therefore, I will give you one last chance, %s. Leave this place, or I will kill you. Your death is guaranteed if you stay.\"", c->name); pressEnter();
 	bool isYes = yes_or_no("Take the vampire up on his offer and leave the mansion?");
 	if(isYes) {
 		printf("\"Hahaha, I always expected you would be a coward. Now, leave me be and vanish, before I change my mind\""); pressEnter();
-		printf("With that, %s leaves the vampire's throne room in shame.\n", c->name); pressEnter();
+		printf("With that, %s leaves the vampire's throne room in shame, never knowing what treasure the vampire surely guards.\n", c->name); pressEnter();
 		printf("Press enter to admit defeat and leave the mansion."); pressEnter();
 		free(c); exit(0);
 	}
@@ -1018,6 +1019,11 @@ int main() {
 	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions */
 	lvl0(c);
 	lvl1(c);
+	lvl2(c);
+	//lvl3(c);
+	//lvl4(c);
+	//lvl5(c);
+	the_end(c);
 	free(c);
 	return 0;
 }
