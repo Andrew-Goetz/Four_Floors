@@ -32,3 +32,4 @@ Then, run the executable with `./four-floors`.
 - [ ] Ending
 - [ ] Save Files
 - [ ] Finishing Touches/Balancing
+- [ ] Colors!

@@ -105,6 +105,7 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* PotionItems */
 	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul" /* Items */
 };
+
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"Find powerful items and potions in the mansion.\n",
 
@@ -127,6 +128,7 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods.\n"
 };
 
+/*************** Utility Functions  ***************/
 /* https://code-examples.net/en/q/11a859 (slightly altered version) cross platform sleep */
 void sleep_ms(int milliseconds) {
 	#ifdef _WIN32
@@ -137,7 +139,7 @@ void sleep_ms(int milliseconds) {
 	    ts.tv_nsec = (milliseconds % 1000) * 1000000;
 	    nanosleep(&ts, NULL);
 	#else
-		printf("An error has occurred, your operating system may not be supported.");
+		printf("An error has occurred, your operating system may not be supported.\n");
 		exit(1);
 	#endif
 }
@@ -149,7 +151,7 @@ int case_compare(const char *word1, const char *word2) {
 	#elif __unix__
 		return strcasecmp(word1, word2);
 	#else
-		printf("An error has occurred, your operating system may not be supported.");
+		printf("An error has occurred, your operating system may not be supported.\n");
 		exit(1);
 	#endif
 }
@@ -157,11 +159,15 @@ int case_compare(const char *word1, const char *word2) {
 /** Call to get input, formats to get rid of trailing \n if it exists */
 void getInput(char input[], char message[]) {
 	printf("%s", message);
-	fgets(input, MAX_INPUT_LENGTH, stdin);
-	assert(strlen(input) > 0);
-	if(input[strlen(input)-1] == '\n') {
-		input[strlen(input)-1] = '\0';
+	if(fgets(input, MAX_INPUT_LENGTH, stdin) != 's') {
+		printf("An error has occurred, fgets() did not return \'s\'.\n");
 	}
+	assert(strlen(input) > 0);
+	if(input[strlen(input)-1] == '\n') { // For proper line spacing
+		input[strlen(input)-1] = '\0';
+		printf("Hi\n");
+	}
+	//@TODO better handling of if input is > MAX_INPUT_LENGTH
 }
 
 /** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
@@ -191,7 +197,8 @@ bool yes_or_no(char message[]) {
 	}
 }
 
-/** Defines a generic character */
+/*************** Character Functions  ***************/
+/** Defines a character */
 typedef struct Characters {
 	char totalHealth;
 	char totalMana;
@@ -229,6 +236,7 @@ Character* newCharacter(char message[], Enemy enemy) {
 	c->effectDuration = 0;
 
 	c->isMonster = enemy;
+	/* Gets player character's name */
 	if(enemy == PLAYER) {
 		getInput(c->name, "Enter your name: ");
 		printf("Your name is " C_BLUE "\'%s\'" C_RESET ". ", c->name);
@@ -540,9 +548,28 @@ void fireball(Character *caster, Character *c) {
 void lightning_stake(Character *caster, Character *c) {
 	//@TODO
 }
+
+/* One in a hundred chance of sheep exploading, dealing SHEEP_DAMAGE damage. */
 void summon_sheep(Character *caster, Character *c) {
-	//@TODO
+	//char sheep_explosion = rand() % 100;
+	char sheep_explosion = rand() % 2;
+	printf("%s summons a sheep!\n", caster->name);
+	sleep_ms(SLEEP_DURATION);
+	if(sheep_explosion == 0) { //sheep explodes
+		const char SHEEP_DAMAGE = 10;
+		c->health -= SHEEP_DAMAGE;
+		printf("The sheep walks towards %s and exploads, dealing %d damage!\n", c->name, SHEEP_DAMAGE);
+	} else if(sheep_explosion == 1) { //different dialogue options based on random number
+		printf("The sheep seems to smoke up a bit as if about to expload, but then walks away normally.\n");
+	} else if(sheep_explosion == 69) {
+		printf("The sheep opens it's mouth and says \"Nice\" in a heavy British accent before walking away.\n");
+	} else if(sheep_explosion == 99) {
+		printf("The sheep sprouts wings and flies off into the distance, leaving the mortal world behind.\n");
+	} else {
+		printf("It's just a regular sheep; it chews up a nearby painting or rug before walking away.\n");
+	}
 }
+
 void sacrificial_brand(Character *caster, Character *c) {
 	//@TODO
 }
@@ -848,8 +875,8 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 /* Floor 1 start */
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
-	printf("A" C_GREEN " forest of trees " C_RESET "surrounds a clearing; it is here that a massive,"
-			C_RED " four-floor mansion " C_RESET "towers above the forest."); pressEnter();
+	printf("A forest of trees surrounds a clearing; it is here that a massive,"
+			" four-floor mansion towers above the forest."); pressEnter();
 	printf(C_BLUE "%s " C_RESET "wonders: what might lie on the fourth floor?", c->name); pressEnter();
 	printf(C_BLUE "%s " C_RESET "reaches the massive front doors of the mansion.\n", c->name);
 	bool isYes = yes_or_no("Enter the mansion, beginning a perilous journey?\n");
