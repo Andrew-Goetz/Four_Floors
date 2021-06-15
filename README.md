@@ -24,7 +24,7 @@ Then, run the executable with `./four-floors`.
 - [ ] Refactor code into separate files
 - [x] Level 0
 - [x] Level 1
-- [ ] Spells/Items that effect game for multiple turns (ie: buffs)
+- [x] Spells/Items that effect game for multiple turns (ie: buffs)
 - [x] Level 2
 - [ ] Level 3
 - [ ] Level 4

@@ -20,6 +20,7 @@
 #define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
 
 /* Some color stuff from https://stackoverflow.com/a/3219471 */
+/* Use like: printf(C_RED "This is red text.\n" C_RESET); */
 #define C_RED     "\x1b[31m"
 #define C_GREEN   "\x1b[32m"
 #define C_YELLOW  "\x1b[33m"
@@ -44,13 +45,13 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 };
 
 /* To make accessing above array less annoying */
+/* MONSTER_STATS[BEAST][HEALTH] gets health of the Beast */
 typedef enum STATS {
 	HEALTH,
 	MANA,
 	ATTACK,
 	DEFENSE
 } Stat;
-
 typedef enum ENEMY_TYPES {
 	PLAYER,
 	BEAST,
@@ -144,7 +145,7 @@ void sleep_ms(int milliseconds) {
 	#endif
 }
 
-/* Cross platform strcasecmp/_stricmp */
+/** Cross platform strcasecmp/_stricmp */
 int case_compare(const char *word1, const char *word2) {
 	#ifdef _WIN32
 		return _stricmp(word1, word2);
@@ -167,7 +168,7 @@ void getInput(char input[], char message[]) {
 		input[strlen(input)-1] = '\0';
 		//printf("Hi\n");
 	}
-	//@TODO better handling of if input is > MAX_INPUT_LENGTH
+	//@TODO better handling of input when > MAX_INPUT_LENGTH
 }
 
 /** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
@@ -181,6 +182,7 @@ void pressEnter() {
 
 /** Ask simple yes or no questions to user.
  *  If yes then return true, if no then return false.
+ *  When used, returned value is stored in bool isYes.
  */
 bool yes_or_no(char message[]) {
 	char input[MAX_INPUT_LENGTH];
@@ -192,7 +194,7 @@ bool yes_or_no(char message[]) {
 		} else if(case_compare(input, "no") == 0 || case_compare(input, "n") == 0) {
 			return false;
 		} else {
-			printf("Invalid input.\n");
+			printf("Invalid input.\n"); //repeats loop and asks again
 		}
 	}
 }
@@ -246,6 +248,7 @@ Character* newCharacter(char message[], Enemy enemy) {
 			printf("Your name is " C_BLUE "\'%s\'" C_RESET ". ", c->name);
 			isYes = yes_or_no("Is this correct?\n");
 		}
+		c->isTurn = true; // make sure player character gets first turn
 	} else {
 		strcpy(c->name, MONSTER_NAMES[enemy]);
 		printf("%s appears!\n", c->name);
@@ -468,7 +471,8 @@ void tears(Character *c) {
 
 void iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
-	//@TODO increase defense a decent amount for 3 turns
+	const char IRON_PELLET_DEFENSE_INCREASE = 3;
+	//@TODO increase defense a decent amount for 3 turns (current turn counts as a turn
 }
 
 void demon_fire(Character *user, Character *c) {
@@ -487,13 +491,14 @@ void demon_fire(Character *user, Character *c) {
 		user->itemSlot = NOTHING;
 	}
 }
-/* Stuns enemy for two turns */
+
+/* Stuns enemy for one turn */
 void light_vial(Character *user, Character *c) {
 	assert(!user->isMonster);
 	if(c->isMonster == WRAITH) {
 		const char LIGHT_VIAL_DAMAGE = 5;
 	} else {
-		printf("%s throws a %s at %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name, c->name);
+		printf("%s throws a %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
 	}
 }
 
@@ -545,6 +550,7 @@ void fireball(Character *caster, Character *c) {
 		printf("%s burns from the flames, taking %d damage!\n", c->name, FIREBALL_DAMAGE);
 	}
 }
+
 void lightning_stake(Character *caster, Character *c) {
 	//@TODO
 }
@@ -573,6 +579,7 @@ void summon_sheep(Character *caster, Character *c) {
 void sacrificial_brand(Character *caster, Character *c) {
 	//@TODO
 }
+
 void frost_resonance(Character *caster, Character *c) {
 	//@TODO
 }
@@ -754,8 +761,8 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
 			isYes = yes_or_no("\n");
 			if(isYes) {
-				c->knowSpell[itemFound - 1] = true; //-1 needed since 0 is NOTHING, bad but w/e
-				printf("After reading the scroll, %s figures out how to cast %s.\n", c->name, ITEM_AND_SPELL_NAMES[itemFound]);
+				c->knowSpell[itemFound - 1] = true; //-1 needed since index 0 is NOTHING, bad but w/e
+				printf("After reading the scroll, %s learns how to cast %s.\n", c->name, ITEM_AND_SPELL_NAMES[itemFound]);
 			} else {
 				printf("Ok then.\n");
 			}
@@ -863,11 +870,14 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 		/* want to make sure turn_number not incremented on help or other non-isTurn-changing instructions */
 		if(isTurnChanged != c->isTurn) {
 			if(turn_number == 255) {
-				printf("%s after so long fighting, %s collapses in exhaustion. Defeat!", c->name, c->name);
+				printf("%s after so long fighting, %s collapses in exhaustion. Defeat!\n", c->name, c->name);
 				free(m); free(c); exit(0);
+			} else if(turn_number == 252) {
+				printf("%s cannot go on much longer! End this fight before exhaustion overtakes %s!\n",
+						c->name, c->name);
 			}
 			turn_number++;
-			//printf("\n%d\n\n", turn_number);
+			printf("\n%d\n\n", turn_number);
 		}
 	}
 	free(m);
@@ -893,6 +903,7 @@ void lvl0(Character *c) {
 	Character *m = newCharacter(" appears!\nType help(h) for how to fight!", BEAST);
 	combat_sequence(c, m, 1);
 }
+
 void lvl1(Character *c) {
 	printf("Looking at %s on the ground, %s notices a strange brand near the beast's torso. "
 		   "Maybe it's important.", MONSTER_NAMES[BEAST], c->name); pressEnter();
@@ -920,6 +931,7 @@ void lvl1(Character *c) {
 	Character *m = newCharacter(" appears!", KILLER_PLANT);
 	combat_sequence(c, m, 1);
 }
+
 /* Floor 2 start */
 void lvl2(Character *c) {
 	printf("%s droops to the ground, then magically shrinks back down to normal size.", MONSTER_NAMES[KILLER_PLANT]); pressEnter();
@@ -961,6 +973,7 @@ void lvl2(Character *c) {
 	Character *m = newCharacter(" appears!", WRAITH);
 	combat_sequence(c, m, 1);
 }
+
 /* Floor 3 start */
 void lvl3(Character *c) {
 	printf("\"You will pay for this!\" This voice... it's the same voice as on the second floor!"); pressEnter();
@@ -969,6 +982,7 @@ void lvl3(Character *c) {
 	combat_sequence(c, m, 2);
 
 }
+
 void lvl4(Character *c) {
 	printf("%s mutters a name in his dying breath: \"Elizabeth...\"", MONSTER_NAMES[MAD_WIZARD]); pressEnter();
 	printf("Behind him, %s sees a number of books, undoubtably written by the deceased man. Press enter to read a few.", c->name); pressEnter();
@@ -986,6 +1000,7 @@ void lvl4(Character *c) {
 	Character *m = newCharacter(" appears!", GOLEM);
 	combat_sequence(c, m, 2);
 }
+
 /* Floor 4 start */
 void lvl5(Character *c) {
 	// printf("%s crumbles into pieces."); pressEnter();
@@ -1011,9 +1026,11 @@ void lvl5(Character *c) {
 	printf("\"Your move, %s.\"", c->name);
 	combat_sequence(c, m, 0); // last fight so no level ups needed
 }
+
 void the_end(Character *c) {
 	printf(" ");
 }
+
 //@TODO implement a save file in the main function, and perhaps an option to start a new game too
 int main() {
 	Character *c = newCharacter("", PLAYER); /* Player created in main, monsters in the lvl functions */

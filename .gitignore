@@ -35,7 +35,7 @@
 *.i*86
 *.x86_64
 *.hex
-four-floors-linux
+four?floors*
 main
 
 # Debug files
