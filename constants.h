@@ -70,7 +70,7 @@ typedef enum STATUS_EFFECTS {
  */ 
 static const int EFFECT_DURATIONS[8] = {
 	0, 2, 2, 2, 3, 3, 1, 1
-}
+};
 
 typedef enum ITEMS_AND_SPELLS {
 	/* Nothing(0) is the default inventory and spell slot value */
