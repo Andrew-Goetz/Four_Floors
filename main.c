@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy, for linux compatibility */
+#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy on windows, for linux compatibility */
 #include <assert.h>
 #include <stdbool.h> 
 #include <stdio.h>
@@ -75,6 +75,13 @@ typedef enum STATUS_EFFECTS {
 	TEARS_ACTIVE,
 	BRAND_ACTIVE
 } Effect;
+
+/* How long each status effect is active, calculated in combat_sequence().
+ * Position in array corresponds to STATUS_EFFECTS enum.
+ */ 
+static const int EFFECT_DURATIONS[8] = {
+	0, 2, 2, 2, 3, 3, 1, 1
+};
 
 typedef enum ITEMS_AND_SPELLS {
 	/* Nothing(0) is the default inventory and spell slot value */
@@ -168,7 +175,7 @@ void getInput(char input[], char message[]) {
 		input[strlen(input)-1] = '\0';
 		//printf("Hi\n");
 	}
-	//@TODO better handling of input when > MAX_INPUT_LENGTH
+	//@TODO better handling of input when > MAX_INPUT_LENGTH, want to swallow extraneous input
 }
 
 /** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
@@ -464,14 +471,16 @@ void usePotion(Character *c, bool isInCombat) {
 }
 
 /***** Item Functions *****/
-void tears(Character *c) {
+Effect tears(Character *c) {
 	printf("%s drinks the %s. %s glows warmly.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot], c->name);
+	return TEARS_ACTIVE;
 	//@TODO needs to toggle some status for the character that only lasts a turn
 }
 
-void iron_pellet(Character *c) {
+Effect iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
 	const char IRON_PELLET_DEFENSE_INCREASE = 3;
+	return DEFENSE_UP;
 	//@TODO increase defense a decent amount for 3 turns (current turn counts as a turn
 }
 
@@ -493,13 +502,14 @@ void demon_fire(Character *user, Character *c) {
 }
 
 /* Stuns enemy for one turn */
-void light_vial(Character *user, Character *c) {
+Effect light_vial(Character *user, Character *c) {
 	assert(!user->isMonster);
 	if(c->isMonster == WRAITH) {
 		const char LIGHT_VIAL_DAMAGE = 5;
 	} else {
 		printf("%s throws a %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
 	}
+	return STUN;
 }
 
 void horn(Character *user, Character *c) {
@@ -507,23 +517,24 @@ void horn(Character *user, Character *c) {
 }
 
 /** Use item in itemSlot */
-void useItem(Character *c, Character *m) {
+Effect useItem(Character *c, Character *m) {
 	assert(!c->isMonster);
+	Effect retEffect = NONE;
 	switch(c->itemSlot) {
 		case NOTHING:
 			printf("There is no item in inventory!\n");
-			return; // Don't end turn here
+			return NONE; // Don't end turn here
 		case TEARS:
-			tears(c);
+			retEffect = tears(c);
 			break;
 		case IRON_PELLET:
-			iron_pellet(c);
+			retEffect = iron_pellet(c);
 			break;
 		case DEMON_FIRE:
 			demon_fire(c, m);
 			break;
 		case LIGHT_VIAL:
-			light_vial(c, m);
+			retEffect = light_vial(c, m);
 			break;
 		case HORN_OF_SAUL:
 			horn(c, m);
@@ -534,6 +545,7 @@ void useItem(Character *c, Character *m) {
 	}
 	c->itemSlot = NOTHING;
 	c->isTurn = false;
+	return retEffect;
 }
 
 /***** Spell Functions *****/
@@ -576,16 +588,24 @@ void summon_sheep(Character *caster, Character *c) {
 	}
 }
 
-void sacrificial_brand(Character *caster, Character *c) {
+Effect sacrificial_brand(Character *caster, Character *c) {
 	//@TODO
+	
+	return BRAND_ACTIVE;
 }
 
-void frost_resonance(Character *caster, Character *c) {
+Effect frost_resonance(Character *caster, Character *c) {
 	//@TODO
+	printf("%s forms a frosty mist in the air, which surrounds %s.\n", caster->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	const char FROST_RESONANCE_DAMAGE = 2;
+	const char FROST_RESONANCE_MANA = 3;
+	printf("%s takes %d damages, and freezes for a turn from the cold!\n", c->name, FROST_RESONANCE_DAMAGE);
+	return STUN;
 }
 
 /** Cast */
-void castSpell(Character *c, Character *m) {
+Effect castSpell(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
@@ -675,9 +695,8 @@ void escape(Character *c, Character *m) {
 	exit(0);
 }
 
-
 /** Call when input is required, c must be the player character, m the monster */
-void actions(Character *c, Character *m) {
+Effect actions(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char input[MAX_INPUT_LENGTH];
 	for(;;) {
@@ -685,22 +704,18 @@ void actions(Character *c, Character *m) {
 		/* help(h): lists out possible commands and then asks if user wants more in depth information */
 		if(case_compare(input, "help") == 0 || case_compare(input, "h") == 0) {
 			help();
-			return;
 		}
 		/* status(s): outputs current player status */
 		if(case_compare(input, "status") == 0 || case_compare(input, "s") == 0) {
 			status(c);
-			return;
 		}
 		/* enemy(e): outputs non-player-character's status, a help fight him */
 		if(case_compare(input, "enemy") == 0 || case_compare(input, "e") == 0) {
 			enemyStatus(c, m);
-			return;
 		}
 		/* attack(a): calls meleeAttack */
 		else if(case_compare(input, "attack") == 0 || case_compare(input, "a") == 0) {
 			meleeAttack(c, m);
-			return;
 		}
 		/* potion(p): use potion item currently in player's potionSlot */
 		else if(case_compare(input, "potion") == 0 || case_compare(input, "p") == 0) {
@@ -708,30 +723,27 @@ void actions(Character *c, Character *m) {
 		}
 		/* item(i): use item currently in player's itemSlot */
 		else if(case_compare(input, "item") == 0 || case_compare(input, "i") == 0) {
-			useItem(c, m);
-			return;
+			return useItem(c, m);
 		}
 		/* cast(c): cast whatever magic is in player's magic slot */
 		else if(case_compare(input, "cast") == 0 || case_compare(input, "c") == 0) {
-			castSpell(c, m);
-			return;
+			return castSpell(c, m);
 		}
 		/* wait(w): do nothing */
 		else if(case_compare(input, "wait") == 0 || case_compare(input, "w") == 0) {
 			wait(c);
-			return;
 		}
 		/* escape(exit): exits the program */
 		/* shortcut is "exit" instead of "e" to avoid accidental exits */
 		else if(case_compare(input, "escape") == 0 || case_compare(input, "exit") == 0) {
 			escape(c, m);
-			exit(0);
 		}
 		/* ask user for input again if the last input was invalid */
 		else {
 			printf("Invalid input, type help(h) for possible commands.\n");
 		}
 	} 
+	return NONE; // default return value
 }
 
 /** When not the players turn, the monster does something: as of right now, it will always attack */
@@ -767,7 +779,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 				printf("Ok then.\n");
 			}
 			break;
-		/* for potions, offer to use item in inventory and take new item @TODO this may not be working rn? */
+		/* for potions, offer to use item in inventory and take new item */
 		case RED_POTION: case GREATER_RED_POTION: case BLUE_POTION:	case GREATER_BLUE_POTION: case PANACEA:
 			printf("Add %s to potion inventory?", ITEM_AND_SPELL_NAMES[itemFound]);
 			if(!c->potionSlot) {
@@ -813,7 +825,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 				}
 			}
 			break;
-		default: //in case something weird happens
+		default:
 			printf("Something goes wrong. It must have been an illusion!\n");
 	}
 }
@@ -851,8 +863,10 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	unsigned char turn_number = 0;
 	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
+	Effect curEffect = NONE;
+	Effect prevEffect = NONE;
 	for(;;) {
-		actions(c, m);
+		curEffect = actions(c, m);
 		if(m->health <= 0) {
 			printf("VICTORY!\n");
 			for(; levelUpNumber != 0; levelUpNumber--) {
@@ -1008,6 +1022,7 @@ void lvl5(Character *c) {
 	printf("Suddenly, a bookshelf on the far wall slides aside, revealing stairs to the fourth floor!");
 
 	printf("Press enter to climb the stairs to the fourth floor the mansion."); pressEnter();
+	item_or_spell_found(c, PANACEA, "On a pedastal in the center of the hall is a beautiful, rainbow-colored potion.");
 	printf("At the end of the hall lies a foreboding pair of black doors. Press enter to open them."); pressEnter();
 	printf("The next room is extravagantly decorated; stained glass windows adorn the walls, and a cloaked figure sits upon a magnificent throne."); pressEnter();
 	printf("He rises slowly from his throne, his crimson-red eyes striking fear into %s's heart.", c->name); pressEnter();

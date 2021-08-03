@@ -26,6 +26,7 @@ Then, run the executable with `./four-floors`.
 - [x] Level 1
 - [x] Spells/Items that effect game for multiple turns (ie: buffs)
 - [x] Level 2
+- [ ] Enemy casts spells
 - [ ] Level 3
 - [ ] Level 4
 - [ ] Level 5
