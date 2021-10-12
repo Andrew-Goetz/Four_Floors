@@ -14,76 +14,7 @@
 #endif
 
 #include "constants.h"
-
-/*************** Utility Functions  ***************/
-/* https://code-examples.net/en/q/11a859 (slightly altered version) cross platform sleep */
-void sleep_ms(int milliseconds) {
-	#ifdef _WIN32
-	    Sleep(milliseconds);
-	#elif __unix__
-	    struct timespec ts;
-	    ts.tv_sec = milliseconds / 1000;
-	    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-	    nanosleep(&ts, NULL);
-	#else
-		printf("An error has occurred, your operating system may not be supported.\n");
-		exit(1);
-	#endif
-}
-
-/** Cross platform strcasecmp/_stricmp */
-int case_compare(const char *word1, const char *word2) {
-	#ifdef _WIN32
-		return _stricmp(word1, word2);
-	#elif __unix__
-		return strcasecmp(word1, word2);
-	#else
-		printf("An error has occurred, your operating system may not be supported.\n");
-		exit(1);
-	#endif
-}
-
-/** Call to get input, formats to get rid of trailing \n if it exists */
-void getInput(char input[], char message[]) {
-	printf("%s", message);
-	if(fgets(input, MAX_INPUT_LENGTH, stdin) == NULL) {
-		printf("An error has occurred, fgets() returned NULL.\n");
-	}
-	assert(strlen(input) > 0);
-	if(input[strlen(input)-1] == '\n') { // For proper line spacing
-		input[strlen(input)-1] = '\0';
-		//printf("Hi\n");
-	}
-	//@TODO better handling of input when > MAX_INPUT_LENGTH, want to swallow extraneous input
-}
-
-/** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
- *  Also important: don't use \n at end of printf when pressEnter() is called immediately after,
- *  because the user pressing enter already goes to the next line.
- */
-void pressEnter() {
-	//printf("%s", message);
-	while(getchar() != '\n');
-}
-
-/** Ask simple yes or no questions to user.
- *  If yes then return true, if no then return false.
- *  When used, returned value is stored in bool isYes.
- */
-bool yes_or_no(char message[]) {
-	char input[MAX_INPUT_LENGTH];
-	printf("%s", message); /* assumes message will end with \n */
-	for(;;) {
-		getInput(input, "Yes(y) or No(n): ");
-		if(case_compare(input, "yes") == 0 || case_compare(input, "y") == 0) {
-			return true;
-		} else if(case_compare(input, "no") == 0 || case_compare(input, "n") == 0) {
-			return false;
-		} else {
-			printf("Invalid input.\n"); //repeats loop and asks again
-		}
-	}
-}
+#include "defs.h"
 
 /*************** Character Functions  ***************/
 /** Defines a character */
@@ -583,22 +514,27 @@ Effect actions(Character *c, Character *m) {
 		/* help(h): lists out possible commands and then asks if user wants more in depth information */
 		if(case_compare(input, "help") == 0 || case_compare(input, "h") == 0) {
 			help();
+			break;
 		}
 		/* status(s): outputs current player status */
 		if(case_compare(input, "status") == 0 || case_compare(input, "s") == 0) {
 			status(c);
+			break;
 		}
 		/* enemy(e): outputs non-player-character's status, a help fight him */
 		if(case_compare(input, "enemy") == 0 || case_compare(input, "e") == 0) {
 			enemyStatus(c, m);
+			break;
 		}
 		/* attack(a): calls meleeAttack */
 		else if(case_compare(input, "attack") == 0 || case_compare(input, "a") == 0) {
 			meleeAttack(c, m);
+			break;
 		}
 		/* potion(p): use potion item currently in player's potionSlot */
 		else if(case_compare(input, "potion") == 0 || case_compare(input, "p") == 0) {
 			usePotion(c, true);
+			break;
 		}
 		/* item(i): use item currently in player's itemSlot */
 		else if(case_compare(input, "item") == 0 || case_compare(input, "i") == 0) {
@@ -611,11 +547,13 @@ Effect actions(Character *c, Character *m) {
 		/* wait(w): do nothing */
 		else if(case_compare(input, "wait") == 0 || case_compare(input, "w") == 0) {
 			wait(c);
+			break;
 		}
 		/* escape(exit): exits the program */
 		/* shortcut is "exit" instead of "e" to avoid accidental exits */
 		else if(case_compare(input, "escape") == 0 || case_compare(input, "exit") == 0) {
 			escape(c, m);
+			break;
 		}
 		/* ask user for input again if the last input was invalid */
 		else {
@@ -729,6 +667,8 @@ void drink_potion(Character *c) {
 /* Handles status effects */
 /* For now, applying a status effect when another is active will overwrite that status effect */
 void status_effect_check(Character *c, unsigned char turn_number) {
+	Effect curEffect = NONE;
+	Effect prevEffect = NONE;
 
 }
 
@@ -742,8 +682,6 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	unsigned char turn_number = 0;
 	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
-	Effect curEffect = NONE;
-	Effect prevEffect = NONE;
 	for(;;) {
 		curEffect = actions(c, m);
 		if(m->health <= 0) {
@@ -770,7 +708,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 						c->name, c->name);
 			}
 			turn_number++;
-			printf("\n%d\n\n", turn_number);
+			//printf("\n%d\n\n", turn_number);
 		}
 	}
 	free(m);

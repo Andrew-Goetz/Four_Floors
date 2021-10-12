@@ -3,7 +3,7 @@
 
 
 /*********** Constants ************/
-#define MAX_INPUT_LENGTH 30 /* No input greater than MAX_INPUT_LENGTH characters allowed */
+#define MAX_INPUT_LENGTH 1000/* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5 /* Number of spells in the game */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
 #define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
@@ -67,9 +67,10 @@ typedef enum STATUS_EFFECTS {
 
 /* How long each status effect is active, calculated in combat_sequence().
  * Position in array corresponds to STATUS_EFFECTS enum.
+ * TODO: should NONE have duration 1 or 0?
  */ 
 static const int EFFECT_DURATIONS[8] = {
-	0, 2, 2, 2, 3, 3, 1, 1
+	1, 2, 2, 2, 3, 3, 1, 1
 };
 
 typedef enum ITEMS_AND_SPELLS {
