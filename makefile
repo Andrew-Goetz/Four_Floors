@@ -1,29 +1,29 @@
-CC = gcc
-FLAGS = -Wall -Wextra -g
-OBJECT_FILES = actions.o combat.o levels.o spells.o character.o items.o main.o potions.o saves.o utility.o
-EXECUTABLE = four_floors
+CC:= gcc
+CFLAGS:= -g -Wall -pedantic -O3
+TARGET:= four_floors
+OBJECT_FILES:= utility.o character.o potions.o items.o spells.o actions.o combat.o levels.o
 
-all:	$(OBJECT_FILES)
-		$(CC) $(FLAGS) $(OBJECT_FILES) -o $(EXECUTABLE)
-actions.o:	constants.h defs.h actions.c
-		$(CC) $(FLAGS) -c actions.c
-combat.o:	constants.h defs.h combat.c
-		$(CC) $(FLAGS) -c combat.c
-levels.o:	constants.h defs.h levels.c
-		$(CC) $(FLAGS) -c levels.c
-spells.o:	constants.h defs.h spells.c
-		$(CC) $(FLAGS) -c spells.c
-character.o:	constants.h defs.h character.c
-		$(CC) $(FLAGS) -c character.c
-items.o:	constants.h defs.h items.c
-		$(CC) $(FLAGS) -c items.c
-main.o:	constants.h defs.h main.c
-		$(CC) $(FLAGS) -c main.c
-potions.o:	constants.h defs.h potions.c
-		$(CC) $(FLAGS) -c potions.c
-saves.o:	constants.h defs.h saves.c
-		$(CC) $(FLAGS) -c saves.c
-utility.o:	constants.h defs.h utility.c
-		$(CC) $(FLAGS) -c utility.c
+all:			main.o $(OBJECT_FILES)
+		$(CC) main.o $(OBJECT_FILES) -o $(TARGET)
+
+main.o:			$(OBJECT_FILES)
+
+utility.o:		utility.c defs.h constants.h
+
+character.o:	character.c defs.h constants.h utility.o
+
+potions.o:		potions.c defs.h constants.h character.o utility.o
+
+items.o:		items.c defs.h constants.h character.o utility.o
+
+spells.o:		spells.c defs.h constants.h character.o utility.o
+
+actions.o:		actions.c defs.h constants.h character.o utility.o potions.o items.o spells.o
+
+combat.o:		combat.c defs.h constants.h character.o utility.o potions.o items.o spells.o actions.o
+
+levels.o:		levels.c defs.h constants.h character.o utility.o potions.o items.o spells.o actions.o combat.o
+
+.PHONY:		clean
 clean:
-		rm -f *.o $(EXECUTABLE)
+	rm -f *.o $(TARGET)

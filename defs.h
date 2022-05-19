@@ -8,6 +8,7 @@
 // utility.c
 void sleep_ms(int milliseconds);
 int case_compare(const char *word1, const char *word2);
+void getInput(char input[], char message[]);
 void pressEnter(void);
 bool yes_or_no(char message[]);
 
@@ -53,18 +54,18 @@ void drink_potion(Character *c);
 
 // items.c
 Effect tears(Character *c);
-Effect iron_pellet(Character *c) {
-void demon_fire(Character *user, Character *c) {
-Effect light_vial(Character *user, Character *c) {
-void horn(Character *user, Character *c) {
+Effect iron_pellet(Character *c);
+void demon_fire(Character *user, Character *c);
+Effect light_vial(Character *user, Character *c);
+void horn(Character *user, Character *c);
 Effect useItem(Character *c, Character *m);
 
 // spells.c
-void fireball(Character *caster, Character *c) {
-void lightning_stake(Character *caster, Character *c) {
-void summon_sheep(Character *caster, Character *c) {
-Effect sacrificial_brand(Character *caster, Character *c) {
-Effect frost_resonance(Character *caster, Character *c) {
+void fireball(Character *caster, Character *c);
+void lightning_stake(Character *caster, Character *c);
+void summon_sheep(Character *caster, Character *c);
+Effect sacrificial_brand(Character *caster, Character *c);
+Effect frost_resonance(Character *caster, Character *c);
 Effect castSpell(Character *c, Character *m);
 
 // combat.c

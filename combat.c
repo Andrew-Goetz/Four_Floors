@@ -1,3 +1,7 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "constants.h"
 #include "defs.h"
 
@@ -23,7 +27,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	printf("%sPress enter to read its description:", message); pressEnter();
 	printf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
-	switch(itemFound) { /* Never going to find nothing so skip 0 */
+	switch(itemFound) {
 		/* for spells, add to knowSpell */
 		case FIREBALL: case LIGHTNING_STAKE: case SUMMON_SHEEP: case SACRIFICIAL_BRAND: case FROST_RESONANCE:
 			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
@@ -87,7 +91,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 }
 
 /* Handles status effects */
-/* For now, applying a status effect when another is active will overwrite that status effect */
+/* For now, applying a new status effect overwrite current status effect */
 void status_effect_check(Character *c, unsigned char turn_number) {
 	Effect curEffect = NONE;
 	Effect prevEffect = NONE;
@@ -104,9 +108,11 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	unsigned char turn_number = 0;
 	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
+	Effect curEffect;
 	for(;;) {
 		curEffect = actions(c, m);
 		if(m->health <= 0) {
+			sleep_ms(SLEEP_DURATION);
 			printf("VICTORY!\n");
 			for(; levelUpNumber != 0; levelUpNumber--) {
 				lvlUp(c);
@@ -123,7 +129,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 		/* want to make sure turn_number not incremented on help or other non-isTurn-changing instructions */
 		if(isTurnChanged != c->isTurn) {
 			if(turn_number == 255) {
-				printf("%s after so long fighting, %s collapses in exhaustion. Defeat!\n", c->name, c->name);
+				printf("After so long fighting, %s collapses in exhaustion. Defeat!\n", c->name);
 				free(m); free(c); exit(0);
 			} else if(turn_number == 252) {
 				printf("%s cannot go on much longer! End this fight before exhaustion overtakes %s!\n",

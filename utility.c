@@ -3,9 +3,17 @@
 #elif __unix__
 	#include <time.h>
 #else
-	printf("Your operating system is not supported. The program will now exit.\n");
+	printf("An error has occurred, your operating system may not be supported.\n");
 	exit(1);
 #endif
+
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include "constants.h"
+#include "defs.h"
 
 /*************** Utility Functions  ***************/
 /* https://code-examples.net/en/q/11a859 (slightly altered version) cross platform sleep */
@@ -35,6 +43,17 @@ int case_compare(const char *word1, const char *word2) {
 	#endif
 }
 
+void getInput(char input[], char message[]) {
+	printf("%s", message);
+	if(fgets(input, MAX_INPUT_LENGTH, stdin) == NULL) {
+		printf("An error has occurred, fgets() returned NULL.\n");
+	}
+	assert(strlen(input) > 0);
+	if(input[strlen(input)-1] == '\n') { // For proper line spacing
+		input[strlen(input)-1] = '\0';
+	}
+	//@TODO better handling of input when > MAX_INPUT_LENGTH
+}
 
 /** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
  *  Also important: don't use \n at end of printf when pressEnter() is called immediately after,
@@ -47,7 +66,7 @@ void pressEnter(void) {
 
 /** Ask simple yes or no questions to user.
  *  If yes then return true, if no then return false.
- *  When used, returned value is stored in bool isYes.
+ *  When used, returned value is stored in bool isYes (convention).
  */
 bool yes_or_no(char message[]) {
 	char input[MAX_INPUT_LENGTH];

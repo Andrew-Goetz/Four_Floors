@@ -1,10 +1,9 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-
 /*********** Constants ************/
 #define MAX_INPUT_LENGTH 1000/* No input greater than MAX_INPUT_LENGTH characters allowed */
-#define SPELLS_IN_GAME 5 /* Number of spells in the game */
+#define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
 #define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
 
@@ -24,13 +23,13 @@ static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
 
 /* Below goes in order: health, mana, attack, defense */
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
-	/* Player Character */	5, 3, 2, 1,
-	/* Beast */ 			5, 0, 2, 0,
-	/* Killer Plant */ 		9, 0, 2, 1, /* Almost 1 shot by fireball */
-	/* Wraith */ 			8, 2, 3, 1, /* Almost 1 shot by light vial */
-	/* Mad Wizard */ 		7, 5, 1, 0, /* Immune to magic, casts a lot of spells */
-	/* Wizard's Golem */ 	10, 0, 4, 3, /* All physical damage so iron pellet good against him */
-	/* Vampire Lord */		9, 3, 4, 2
+	/* Player Character */	{5, 3, 2, 1},
+	/* Beast */ 			{5, 0, 2, 0},
+	/* Killer Plant */ 		{9, 0, 2, 1}, /* Almost 1 shot by fireball */
+	/* Wraith */ 			{8, 2, 3, 1}, /* Almost 1 shot by light vial */
+	/* Mad Wizard */ 		{7, 5, 1, 0}, /* Immune to magic, casts a lot of spells */
+	/* Wizard's Golem */ 	{10, 0, 4, 3}, /* All physical damage so iron pellet good against him */
+	/* Vampire Lord */		{9, 3, 4, 2}
 };
 
 /* To make accessing above array less annoying */
@@ -41,6 +40,7 @@ typedef enum STATS {
 	ATTACK,
 	DEFENSE
 } Stat;
+
 typedef enum ENEMY_TYPES {
 	PLAYER,
 	BEAST,
@@ -125,6 +125,5 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.\n",
 	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods.\n"
 };
-
 
 #endif

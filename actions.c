@@ -1,5 +1,9 @@
-#include "constants.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "defs.h"
+#include "constants.h"
 
 /** Takes two character, and character attacker and character c.
  *  Checks to make sure arguments are in correct order,
@@ -32,23 +36,20 @@ void status(Character *c) {
 	bool anySpells = false;
 	for(int i = 0; i < SPELLS_IN_GAME; i++) {
 		if(c->knowSpell[i]) {
-			anySpells = true;
+			printf("%s knows the following spells:\n", c->name);
 			break;
 		}
 	}
-	if(anySpells) {
-		printf("%s knows the following spells:\n", c->name);
-		if(c->knowSpell[0]) { // FIREBALL
-			printf("\tFireball(f)\n");
-		} if(c->knowSpell[1]) { // LIGHTNING_STAKE
-			printf("\tLightning Stake(L)\n");
-		} if(c->knowSpell[2]) { // SUMMON_SHEEP
-			printf("\tSummon Sheep(s)\n");
-		} if(c->knowSpell[3]) { // SACRIFICIAL_BRAND
-			printf("\tSacrificial Brand(b)\n");
-		} if(c->knowSpell[4]) { // FROST_RESONANCE
-			printf("\tFrost Resonance(r)\n");
-		}
+	if(c->knowSpell[0]) { // FIREBALL
+		printf("\tFireball(f)\n");
+	} if(c->knowSpell[1]) { // LIGHTNING_STAKE
+		printf("\tLightning Stake(L)\n");
+	} if(c->knowSpell[2]) { // SUMMON_SHEEP
+		printf("\tSummon Sheep(s)\n");
+	} if(c->knowSpell[3]) { // SACRIFICIAL_BRAND
+		printf("\tSacrificial Brand(b)\n");
+	} if(c->knowSpell[4]) { // FROST_RESONANCE
+		printf("\tFrost Resonance(r)\n");
 	}
 }
 
@@ -96,7 +97,7 @@ void help(void) {
 				"\tPotions, items, and spells can be found after each battle.\n"
 				"\tItems and potions can only be used once, while spells can be used as long as there is enough mana to cast them.\n"
 				"\tCertain items, spells, and potions are very effective against certain enemies.\n"
-				"\tAt least 1 level up occurs after each battle; the game automatically saves when this occurs.\n");
+				"\tAt least 1 level up occurs after each battle; this will automatically save the game.\n");
 				//"\t\n"
 	} else {
 		printf("Ok then.\n");
@@ -119,6 +120,7 @@ void escape(Character *c, Character *m) {
 }
 
 /** Call when input is required, c must be the player character, m the monster */
+
 Effect actions(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char input[MAX_INPUT_LENGTH];
@@ -130,12 +132,12 @@ Effect actions(Character *c, Character *m) {
 			break;
 		}
 		/* status(s): outputs current player status */
-		if(case_compare(input, "status") == 0 || case_compare(input, "s") == 0) {
+		else if(case_compare(input, "status") == 0 || case_compare(input, "s") == 0) {
 			status(c);
 			break;
 		}
 		/* enemy(e): outputs non-player-character's status, a help fight him */
-		if(case_compare(input, "enemy") == 0 || case_compare(input, "e") == 0) {
+		else if(case_compare(input, "enemy") == 0 || case_compare(input, "e") == 0) {
 			enemyStatus(c, m);
 			break;
 		}
@@ -168,7 +170,6 @@ Effect actions(Character *c, Character *m) {
 			escape(c, m);
 			break;
 		}
-		/* ask user for input again if the last input was invalid */
 		else {
 			printf("Invalid input, type help(h) for possible commands.\n");
 		}

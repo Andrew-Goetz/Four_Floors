@@ -1,3 +1,6 @@
+#include <assert.h>
+#include <stdio.h>
+
 #include "constants.h"
 #include "defs.h"
 
@@ -92,4 +95,3 @@ void drink_potion(Character *c) {
 		printf("Ok then.\n");
 	}
 }
-

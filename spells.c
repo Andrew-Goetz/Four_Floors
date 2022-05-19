@@ -1,3 +1,7 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "constants.h"
 #include "defs.h"
 
@@ -17,6 +21,7 @@ void fireball(Character *caster, Character *c) {
 
 void lightning_stake(Character *caster, Character *c) {
 	//@TODO
+	printf("PLACEHOLDER\n");
 }
 
 /* One in a hundred chance of sheep exploading, dealing SHEEP_DAMAGE damage. */
@@ -56,19 +61,20 @@ Effect frost_resonance(Character *caster, Character *c) {
 	return STUN;
 }
 
-/** Cast */
 Effect castSpell(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
-	for(int i = 0; i < SPELLS_IN_GAME; i++) {
+	for(int i = 1; i <= SPELLS_IN_GAME; i++) { //@TODO verify recent change works
 		if(c->knowSpell[i]) {
+			//printf("IMPORTANT DEBUG: %d\n", i);
 			isMagicUser++;
-			firstSpell = i + 1; /* corresponds to value of spell in the enum */
+			firstSpell = i; /* corresponds to value of spell in the enum */
 		}
 	}
-	/* Need to check knowSpell during input too, make sure user doesn't guess a spell they don't know */
+	//printf("DEBUG: isMagicUser = %d", isMagicUser);
 	if(isMagicUser == 1) { // cast whatever 1 spell the player knows
+		printf("firstSpell: %d, FIREBALL: %d\n", firstSpell, FIREBALL);
 		switch(firstSpell) {
 			case FIREBALL:
 				fireball(c, m);
@@ -91,34 +97,35 @@ Effect castSpell(Character *c, Character *m) {
 		}
 	} else if(isMagicUser > 1) { // output spells the player knows and have them pick one
 		printf("What spell to cast?\n");
-		if(c->knowSpell[0]) { // FIREBALL
+		if(c->knowSpell[1]) { // FIREBALL
 			printf("Fireball(f)? ");
-		} if(c->knowSpell[1]) { // LIGHTNING_STAKE
+		} if(c->knowSpell[2]) { // LIGHTNING_STAKE
 			printf("Lightning Stake(L)? ");
-		} if(c->knowSpell[2]) { // SUMMON_SHEEP
+		} if(c->knowSpell[3]) { // SUMMON_SHEEP
 			printf("Summon Sheep(s)? ");
-		} if(c->knowSpell[3]) { // SACRIFICIAL_BRAND
+		} if(c->knowSpell[4]) { // SACRIFICIAL_BRAND
 			printf("Sacrificial Brand(b)? ");
-		} if(c->knowSpell[4]) { // FROST_RESONANCE
-			printf("Frost Resonance(r)? ");
+		} if(c->knowSpell[5]) { // FROST_RESONANCE
+			printf("Frost Resonance(r)?");
 		}
 		printf("\n");
 		char input[MAX_INPUT_LENGTH];
+		/* Need to check knowSpell during input too, make sure user doesn't guess a spell they don't know */
 		for(;;) {
 			getInput(input, ">> ");
-			if(c->knowSpell[0] && (case_compare(input, "Fireball") == 0 || case_compare(input, "f") == 0)) {
+			if(c->knowSpell[1] && (case_compare(input, "Fireball") == 0 || case_compare(input, "f") == 0)) {
 				fireball(c, m);
 				break;
-			} else if(c->knowSpell[1] && (case_compare(input, "Lightning Stake") == 0 || case_compare(input, "L") == 0)) {
+			} else if(c->knowSpell[2] && (case_compare(input, "Lightning Stake") == 0 || case_compare(input, "L") == 0)) {
 				lightning_stake(c, m);
 				break;
-			} else if(c->knowSpell[2] && (case_compare(input, "Summon Sheep") == 0 || case_compare(input, "s") == 0)) {
+			} else if(c->knowSpell[3] && (case_compare(input, "Summon Sheep") == 0 || case_compare(input, "s") == 0)) {
 				summon_sheep(c, m);
 				break;
-			} else if(c->knowSpell[3] && (case_compare(input, "Sacrificial Brand") == 0 || case_compare(input, "b") == 0)) {
+			} else if(c->knowSpell[4] && (case_compare(input, "Sacrificial Brand") == 0 || case_compare(input, "b") == 0)) {
 				sacrificial_brand(c, m);
 				break;
-			} else if(c->knowSpell[4] && (case_compare(input, "Frost Resonance") == 0 || case_compare(input, "r") == 0)) {
+			} else if(c->knowSpell[5] && (case_compare(input, "Frost Resonance") == 0 || case_compare(input, "r") == 0)) {
 				frost_resonance(c, m);
 				break;
 			} else {

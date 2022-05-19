@@ -1,3 +1,6 @@
+#include <assert.h>
+#include <stdio.h>
+
 #include "constants.h"
 #include "defs.h"
 
