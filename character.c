@@ -29,7 +29,8 @@ Character* newCharacter(char message[], Enemy enemy) {
 
 	c->itemSlot = NOTHING;
 	c->potionSlot = NOTHING;
-	for(unsigned char i = 0; i < SPELLS_IN_GAME; i++) c->knowSpell[i] = false;
+	for(unsigned char i = 0; i < SPELLS_IN_GAME; i++) 
+		c->knowSpell[i] = false;
 
 	c->effect = NONE;
 	c->effectDuration = 0;
@@ -47,6 +48,7 @@ Character* newCharacter(char message[], Enemy enemy) {
 		}
 		c->isTurn = true; // make sure player character gets first turn
 	} else {
+		//assert(sizeof(MONSTER_NAMES[enemy])/sizeof(char) < 100);
 		strcpy(c->name, MONSTER_NAMES[enemy]);
 		printf("%s appears!\n", c->name);
 	}

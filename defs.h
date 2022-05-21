@@ -42,31 +42,30 @@ void enemyStatus(Character *c, Character *m);
 void help(void);
 void wait(Character *c);
 void escape(Character *c, Character *m);
-Effect actions(Character *c, Character *m);
+void actions(Character *c, Character *m);
 
 // potions.c
 void red_potion(Character *c, bool isGreater);
-void blue_potion(Character *c, bool isGreater);
 void blue_potion(Character *c, bool isGreater);
 void panacea(Character *c);
 void usePotion(Character *c, bool isInCombat);
 void drink_potion(Character *c);
 
 // items.c
-Effect tears(Character *c);
-Effect iron_pellet(Character *c);
+void tears(Character *c);
+void iron_pellet(Character *c);
 void demon_fire(Character *user, Character *c);
-Effect light_vial(Character *user, Character *c);
+void light_vial(Character *user, Character *c);
 void horn(Character *user, Character *c);
-Effect useItem(Character *c, Character *m);
+void useItem(Character *c, Character *m);
 
 // spells.c
 void fireball(Character *caster, Character *c);
 void lightning_stake(Character *caster, Character *c);
 void summon_sheep(Character *caster, Character *c);
-Effect sacrificial_brand(Character *caster, Character *c);
-Effect frost_resonance(Character *caster, Character *c);
-Effect castSpell(Character *c, Character *m);
+void sacrificial_brand(Character *caster, Character *c);
+void frost_resonance(Character *caster, Character *c);
+void castSpell(Character *c, Character *m);
 
 // combat.c
 void monsterAction(Character *m, Character *c);

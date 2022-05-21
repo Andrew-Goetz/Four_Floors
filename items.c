@@ -4,16 +4,16 @@
 #include "constants.h"
 #include "defs.h"
 
-Effect tears(Character *c) {
+void tears(Character *c) {
 	printf("%s drinks the %s. %s glows warmly.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot], c->name);
-	return TEARS_ACTIVE;
+	//return TEARS_ACTIVE;
 	//@TODO needs to toggle some status for the character that only lasts a turn
 }
 
-Effect iron_pellet(Character *c) {
+void iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
 	const char IRON_PELLET_DEFENSE_INCREASE = 3;
-	return DEFENSE_UP;
+	//return DEFENSE_UP;
 	//@TODO increase defense a decent amount for 3 turns (current turn counts as a turn
 }
 
@@ -35,14 +35,14 @@ void demon_fire(Character *user, Character *c) {
 }
 
 /* Stuns enemy for one turn */
-Effect light_vial(Character *user, Character *c) {
+void light_vial(Character *user, Character *c) {
 	assert(!user->isMonster);
 	if(c->isMonster == WRAITH) {
 		const char LIGHT_VIAL_DAMAGE = 5;
 	} else {
 		printf("%s throws a %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
 	}
-	return STUN;
+	//return STUN;
 }
 
 void horn(Character *user, Character *c) {
@@ -50,24 +50,23 @@ void horn(Character *user, Character *c) {
 }
 
 /** Use item in itemSlot */
-Effect useItem(Character *c, Character *m) {
+void useItem(Character *c, Character *m) {
 	assert(!c->isMonster);
-	Effect retEffect = NONE;
 	switch(c->itemSlot) {
 		case NOTHING:
 			printf("There is no item in inventory!\n");
-			return NONE; // Don't end turn here
+			return; // Don't end turn here
 		case TEARS:
-			retEffect = tears(c);
+			tears(c);
 			break;
 		case IRON_PELLET:
-			retEffect = iron_pellet(c);
+			iron_pellet(c);
 			break;
 		case DEMON_FIRE:
 			demon_fire(c, m);
 			break;
 		case LIGHT_VIAL:
-			retEffect = light_vial(c, m);
+			light_vial(c, m);
 			break;
 		case HORN_OF_SAUL:
 			horn(c, m);
@@ -78,5 +77,4 @@ Effect useItem(Character *c, Character *m) {
 	}
 	c->itemSlot = NOTHING;
 	c->isTurn = false;
-	return retEffect;
 }

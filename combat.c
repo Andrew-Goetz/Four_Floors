@@ -15,15 +15,14 @@ void monsterAction(Character *m, Character *c) {
 	c->isTurn = true;
 }
 
-/** Ask user to equip item, buffitem, or spell found.
- *  Pass in player character, particular item that is found, and message.
+/** Ask user to equip item, potion, or spell found.
+ *  Pass in player character, particular item that is found, and message to display.
  *  Whether "Item" is a Spell, potion, or Item will be determined in the function.
  *  If item, needs to go in itemSlot; if potion, needs to go in potionSlot, spells stored in knowSpell.
  *  message should have a trailing \n.
  */
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
-	// printf("\nTEST: %s: %s\n\n", ITEM_AND_SPELL_NAMES[itemFound], ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	printf("%sPress enter to read its description:", message); pressEnter();
 	printf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]); pressEnter();
 	bool isYes;
@@ -93,6 +92,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 
 /* Handles status effects */
 /* For now, applying a new status effect overwrite current status effect */
+//TODO maybe remove turn_number argument?? should be handled fine in combat_sequence
 void status_effect_check(Character *c, unsigned char turn_number) {
 	Effect curEffect = NONE;
 	Effect prevEffect = NONE;
@@ -109,19 +109,19 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	unsigned char turn_number = 0;
 	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
-	Effect curEffect;
 	for(;;) {
-		curEffect = actions(c, m);
+		actions(c, m);
 		if(m->health <= 0) {
 			sleep_ms(SLEEP_DURATION);
 			printf("VICTORY!\n");
+			sleep_ms(SLEEP_DURATION);
 			for(; levelUpNumber != 0; levelUpNumber--) {
 				lvlUp(c);
 			}
 			c->isTurn = true;
 			break;
 		}
-		bool isTurnChanged = c->isTurn;
+		isTurnChanged = c->isTurn;
 		monsterAction(m, c);
 		if(c->health <= 0) {
 			printf("%s has been defeated!\n", c->name);

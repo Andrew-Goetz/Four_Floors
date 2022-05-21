@@ -13,6 +13,7 @@
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
 	sleep_ms(SLEEP_DURATION);
+	//@TODO check status for BRAND_ACTIVE here
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
@@ -34,21 +35,22 @@ void status(Character *c) {
 		printf("%s in potion slot.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 	}
 	bool anySpells = false;
-	for(int i = 0; i < SPELLS_IN_GAME; i++) {
+	for(int i = 1; i < SPELLS_IN_GAME; i++) {
 		if(c->knowSpell[i]) {
 			printf("%s knows the following spells:\n", c->name);
 			break;
 		}
 	}
-	if(c->knowSpell[0]) { // FIREBALL
+	//@TODO check that this works properly, it almost certainly does
+	if(c->knowSpell[1]) { // FIREBALL
 		printf("\tFireball(f)\n");
-	} if(c->knowSpell[1]) { // LIGHTNING_STAKE
+	} if(c->knowSpell[2]) { // LIGHTNING_STAKE
 		printf("\tLightning Stake(L)\n");
-	} if(c->knowSpell[2]) { // SUMMON_SHEEP
+	} if(c->knowSpell[3]) { // SUMMON_SHEEP
 		printf("\tSummon Sheep(s)\n");
-	} if(c->knowSpell[3]) { // SACRIFICIAL_BRAND
+	} if(c->knowSpell[4]) { // SACRIFICIAL_BRAND
 		printf("\tSacrificial Brand(b)\n");
-	} if(c->knowSpell[4]) { // FROST_RESONANCE
+	} if(c->knowSpell[5]) { // FROST_RESONANCE
 		printf("\tFrost Resonance(r)\n");
 	}
 }
@@ -121,7 +123,7 @@ void escape(Character *c, Character *m) {
 
 /** Call when input is required, c must be the player character, m the monster */
 
-Effect actions(Character *c, Character *m) {
+void actions(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char input[MAX_INPUT_LENGTH];
 	for(;;) {
@@ -153,11 +155,13 @@ Effect actions(Character *c, Character *m) {
 		}
 		/* item(i): use item currently in player's itemSlot */
 		else if(case_compare(input, "item") == 0 || case_compare(input, "i") == 0) {
-			return useItem(c, m);
+			useItem(c, m);
+			break;
 		}
 		/* cast(c): cast whatever magic is in player's magic slot */
 		else if(case_compare(input, "cast") == 0 || case_compare(input, "c") == 0) {
-			return castSpell(c, m);
+			castSpell(c, m);
+			break;
 		}
 		/* wait(w): do nothing */
 		else if(case_compare(input, "wait") == 0 || case_compare(input, "w") == 0) {
@@ -174,5 +178,4 @@ Effect actions(Character *c, Character *m) {
 			printf("Invalid input, type help(h) for possible commands.\n");
 		}
 	} 
-	return NONE; // default return value
 }

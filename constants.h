@@ -3,7 +3,8 @@
 
 /*********** Constants ************/
 #define MAX_INPUT_LENGTH 1000/* No input greater than MAX_INPUT_LENGTH characters allowed */
-#define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank */
+#define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank (hence the +1) */
+#define STATUS_EFFECT_NUM 8 /* Number of status effects in the game, including NONE status effect */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
 #define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
 
@@ -67,9 +68,10 @@ typedef enum STATUS_EFFECTS {
 
 /* How long each status effect is active, calculated in combat_sequence().
  * Position in array corresponds to STATUS_EFFECTS enum.
- * TODO: should NONE have duration 1 or 0?
+ * Status effect NONE will have duration 1 and be reapplied each turn.
+ * Some effects (STUN, for instance) will be changed to a different duration on occasion, these are just defaults.
  */ 
-static const int EFFECT_DURATIONS[8] = {
+static const int EFFECT_DURATIONS[STATUS_EFFECT_NUM] = {
 	1, 2, 2, 2, 3, 3, 1, 1
 };
 
@@ -110,7 +112,7 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"The magic of the southern deserts. The fire radiates with a blue, magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
 	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.\n",
 	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.\n",
-	"The magic of the flagellants.\n When used, the enemy is instantly defeated, but the health of the caster is reduced to 1.\n",
+	"The magic of the martyrs and their noble sacrifices.\n Reduces caster health to 1. If caster is attacked the following turn, caster takes no damage and the enemy's health is reduced to 1.\n",
 	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n",
 
 	"A red, slimy liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n",
