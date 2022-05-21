@@ -1,3 +1,10 @@
+#define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy on windows, for linux compatibility */
+
+#include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+
 #ifdef _WIN32
 	#include <windows.h>
 #elif __unix__
@@ -6,11 +13,6 @@
 	printf("An error has occurred, your operating system may not be supported.\n");
 	exit(1);
 #endif
-
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
 
 #include "constants.h"
 #include "defs.h"

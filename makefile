@@ -1,12 +1,12 @@
 CC:= gcc
-CFLAGS:= -g -Wall -pedantic -O3
+CFLAGS:= -O3 -g #-g -Wall -pedantic -O3
 TARGET:= four_floors
 OBJECT_FILES:= utility.o character.o potions.o items.o spells.o actions.o combat.o levels.o
 
 all:			main.o $(OBJECT_FILES)
 		$(CC) main.o $(OBJECT_FILES) -o $(TARGET)
 
-main.o:			$(OBJECT_FILES)
+main.o:			defs.h $(OBJECT_FILES)
 
 utility.o:		utility.c defs.h constants.h
 

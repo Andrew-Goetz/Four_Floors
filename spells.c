@@ -65,7 +65,8 @@ Effect castSpell(Character *c, Character *m) {
 	assert(!c->isMonster);
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
-	for(int i = 1; i <= SPELLS_IN_GAME; i++) { //@TODO verify recent change works
+	for(int i = 0; i < SPELLS_IN_GAME; i++) {
+		//printf("\n%d\n", c->knowSpell[i]);
 		if(c->knowSpell[i]) {
 			//printf("IMPORTANT DEBUG: %d\n", i);
 			isMagicUser++;

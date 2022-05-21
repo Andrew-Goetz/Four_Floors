@@ -25,15 +25,16 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
 	// printf("\nTEST: %s: %s\n\n", ITEM_AND_SPELL_NAMES[itemFound], ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	printf("%sPress enter to read its description:", message); pressEnter();
-	printf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
+	printf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]); pressEnter();
 	bool isYes;
 	switch(itemFound) {
-		/* for spells, add to knowSpell */
+		/* for spells, add to knowSpell, making sure index 0 (NOTHING) is still false */
 		case FIREBALL: case LIGHTNING_STAKE: case SUMMON_SHEEP: case SACRIFICIAL_BRAND: case FROST_RESONANCE:
 			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
 			isYes = yes_or_no("\n");
 			if(isYes) {
-				c->knowSpell[itemFound - 1] = true; //-1 needed since index 0 is NOTHING, bad but w/e
+				c->knowSpell[itemFound] = true;
+				assert(c->knowSpell[0] == false);
 				printf("After reading the scroll, %s learns how to cast %s.\n", c->name, ITEM_AND_SPELL_NAMES[itemFound]);
 			} else {
 				printf("Ok then.\n");
