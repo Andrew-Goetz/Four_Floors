@@ -13,15 +13,19 @@
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
 	sleep_ms(SLEEP_DURATION);
-	//@TODO check status for BRAND_ACTIVE here
+	if(!attacker->isMonster) attacker->isTurn = false;
+	if(c->effect == BRAND_ACTIVE) {
+		attacker->health = 1;
+		printf("%s is drained of its energy by the brand, leaving %s with %d health!", attacker->name, attacker->name, attacker->health);
+		return;
+	}
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;
-		printf("%s took %u damage!\n", c->name, effectiveDamage);
+		printf("%s took %d damage!\n", c->name, effectiveDamage);
 	} else {
 		printf("%s took no damage!\n", c->name);
 	}
-	if(!attacker->isMonster) attacker->isTurn = false;
 }
 
 /* Output status, use enemyStatus for non-player characters */
@@ -125,6 +129,8 @@ void escape(Character *c, Character *m) {
 
 void actions(Character *c, Character *m) {
 	assert(!c->isMonster);
+	if(!c->isTurn) //Should only occur if c was just stunned
+		return;
 	char input[MAX_INPUT_LENGTH];
 	for(;;) {
 		getInput(input, ">> ");

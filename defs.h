@@ -70,7 +70,7 @@ void castSpell(Character *c, Character *m);
 // combat.c
 void monsterAction(Character *m, Character *c);
 void item_or_spell_found(Character *c, Item itemFound, char message[]);
-void status_effect_check(Character *c, unsigned char turn_number);
+void status_effect_check(Character *c);
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber);
 
 // levels.c

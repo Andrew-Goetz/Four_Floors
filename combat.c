@@ -93,10 +93,37 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 /* Handles status effects */
 /* For now, applying a new status effect overwrite current status effect */
 //TODO maybe remove turn_number argument?? should be handled fine in combat_sequence
-void status_effect_check(Character *c, unsigned char turn_number) {
-	Effect curEffect = NONE;
-	Effect prevEffect = NONE;
-
+void status_effect_check(Character *c) {
+	switch(c->effect) {
+		case NONE:
+			return;
+		case STUN:
+			c->isTurn = false;
+			printf("%s is stunned and loses a turn!\n", c->name);
+			break;
+		case POISON:
+			if(c->health > 1) {
+				c->health -= 1;
+				printf("%s takes 1 damage from poison!\n", c->name);
+			} else {
+				printf("%s can take no more damage from poison!\n", c->name);
+				c->effectDuration = 0;
+			}
+			break;
+		case DRAIN:
+			break;
+		case DEFENSE_UP:
+			break;
+		case ATTACK_AND_HEALTH_UP:
+			break;
+		case TEARS_ACTIVE:
+			break;
+		case BRAND_ACTIVE:
+			break;
+	}
+	c->effectDuration -= 1;
+	if(c->effectDuration == 0)
+		c->effect = NONE;
 }
 
 /** Function called once each level when combat is in progress.
@@ -110,6 +137,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
 	for(;;) {
+		status_effect_check(c);
 		actions(c, m);
 		if(m->health <= 0) {
 			sleep_ms(SLEEP_DURATION);
@@ -122,6 +150,7 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			break;
 		}
 		isTurnChanged = c->isTurn;
+		status_effect_check(m);
 		monsterAction(m, c);
 		if(c->health <= 0) {
 			printf("%s has been defeated!\n", c->name);

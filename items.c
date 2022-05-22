@@ -10,11 +10,10 @@ void tears(Character *c) {
 	//@TODO needs to toggle some status for the character that only lasts a turn
 }
 
+/* Increases defense for 3 turns */
 void iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
 	const char IRON_PELLET_DEFENSE_INCREASE = 3;
-	//return DEFENSE_UP;
-	//@TODO increase defense a decent amount for 3 turns (current turn counts as a turn
 }
 
 void demon_fire(Character *user, Character *c) {
@@ -37,16 +36,17 @@ void demon_fire(Character *user, Character *c) {
 /* Stuns enemy for one turn */
 void light_vial(Character *user, Character *c) {
 	assert(!user->isMonster);
-	if(c->isMonster == WRAITH) {
-		const char LIGHT_VIAL_DAMAGE = 5;
-	} else {
-		printf("%s throws a %s, blinding %s.\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name);
-	}
-	//return STUN;
+	const char LIGHT_VIAL_DAMAGE = (c->isMonster == WRAITH) ? 5 : 1;
+	c->health -= LIGHT_VIAL_DAMAGE;
+	c->effect = STUN;
+	c->effectDuration = EFFECT_DURATIONS[STUN];
+	printf("%s throws a %s, blinding and stunning %s for a turn, and dealing %d damage!\n", user->name, ITEM_AND_SPELL_NAMES[user->itemSlot], c->name, LIGHT_VIAL_DAMAGE);
 }
 
+/* Applies increased health and mana for a fight */
 void horn(Character *user, Character *c) {
 	assert(!user->isMonster);
+	//@TODO
 }
 
 /** Use item in itemSlot */

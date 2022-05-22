@@ -68,11 +68,10 @@ typedef enum STATUS_EFFECTS {
 
 /* How long each status effect is active, calculated in combat_sequence().
  * Position in array corresponds to STATUS_EFFECTS enum.
- * Status effect NONE will have duration 1 and be reapplied each turn.
  * Some effects (STUN, for instance) will be changed to a different duration on occasion, these are just defaults.
  */ 
 static const int EFFECT_DURATIONS[STATUS_EFFECT_NUM] = {
-	1, 2, 2, 2, 3, 3, 1, 1
+	0, 1, 2, 2, 3, 3, 1, 1
 };
 
 typedef enum ITEMS_AND_SPELLS {
