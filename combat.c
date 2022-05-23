@@ -8,11 +8,15 @@
 /** When not the players turn, the monster does something: as of right now, it will always attack */
 //TODO: should this be where status effects for monster are checked?
 void monsterAction(Character *m, Character *c) {
-	if(!c->isTurn) {
-		sleep_ms(SLEEP_DURATION);
-		meleeAttack(m, c);
-	}
+	assert(m->isMonster && !c->isMonster);
+	if(c->isTurn)
+		return;
+	m->isTurn = false;
 	c->isTurn = true;
+	sleep_ms(SLEEP_DURATION);
+	if(m->effect == STUN)
+		return;
+	meleeAttack(m, c);
 }
 
 /** Ask user to equip item, potion, or spell found.
@@ -121,9 +125,10 @@ void status_effect_check(Character *c) {
 		case BRAND_ACTIVE:
 			break;
 	}
-	c->effectDuration -= 1;
 	if(c->effectDuration == 0)
 		c->effect = NONE;
+	else
+		c->effectDuration -= 1;
 }
 
 /** Function called once each level when combat is in progress.
@@ -150,8 +155,10 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			break;
 		}
 		isTurnChanged = c->isTurn;
-		status_effect_check(m);
-		monsterAction(m, c);
+		if(!c->isTurn) {
+			status_effect_check(m);
+			monsterAction(m, c);
+		}
 		if(c->health <= 0) {
 			printf("%s has been defeated!\n", c->name);
 			free(m); free(c); exit(0);

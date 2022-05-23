@@ -106,25 +106,25 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 };
 
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
-	"Find powerful items and potions in the mansion.\n",
+	"Find powerful items and potions in the mansion.",
 
 	"The magic of the southern deserts. The fire radiates with a blue, magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
-	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.\n",
-	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.\n",
-	"The magic of the martyrs and their noble sacrifices.\n Reduces caster health to 1. If caster is attacked the following turn, caster takes no damage and the enemy's health is reduced to 1.\n",
-	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.\n",
+	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.",
+	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.",
+	"The magic of the martyrs and their noble sacrifices.\n Reduces caster health to 1. If caster is attacked the following turn, caster takes no damage and the enemy's health is reduced to 1.",
+	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.",
 
-	"A red, slimy liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.\n",
-	"A red, slimy liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.\n",
-	"A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.\n",
-	"A blue, cold liquid. Even thicker than the regular potion.\nRestores 5 mana when used.\n",
-	"The cure-all spoken of in ancient legends. The potion glimmers a brilliant gold.\nRemoves any negative status effects, such as poison.\n",
+	"A red, slimy liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.",
+	"A red, slimy liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.",
+	"A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.",
+	"A blue, cold liquid. Even thicker than the regular potion.\nRestores 5 mana when used.",
+	"The cure-all spoken of in ancient legends. The potion glimmers a brilliant gold.\nRemoves any negative status effects, such as poison.",
 
-	"The tears of a fallen hero and his broken promise.\nUsing immediately before a monster deals fatal damage restores health to full.\n",
-	"A foul tasting, chewy medicine. Used by warriors from the east.\nUsing makes one's skin solid as iron for a short time, increasing defense.\n",
-	"The flames of ancient demons, captured in a vial by coastal wizards.\nSmashing this vial will make enemies erupt into flames.\n",
-	"A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.\n",
-	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods.\n"
+	"The tears of a fallen hero and his broken promise.\nUsing immediately before a monster deals fatal damage restores health to full.",
+	"A foul tasting, chewy medicine. Used by warriors from the east.\nUsing makes one's skin solid as iron for a short time, increasing defense.",
+	"The flames of ancient demons, captured in a vial by coastal wizards.\nSmashing this vial will make enemies erupt into flames.",
+	"A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.",
+	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods."
 };
 
 #endif

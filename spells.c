@@ -7,6 +7,8 @@
 
 void fireball(Character *caster, Character *c) {
 	printf("%s casts fireball!\n", caster->name);
+	assert(caster->mana != 0);
+	caster->mana -= 1;
 	sleep_ms(SLEEP_DURATION);
 	if(c->isMonster == KILLER_PLANT) {
 		const char FIREBALL_DAMAGE = 7;

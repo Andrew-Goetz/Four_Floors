@@ -58,7 +58,7 @@ Character* newCharacter(char message[], Enemy enemy) {
 /** Increases the stat of the player's choice, should be called whenever a monster is defeated */
 void lvlUp(Character *c) {
 	assert(!c->isMonster);
-	printf("Level up avaliable!\nLevel health(h), mana(m), attack(a), or defense(d)?\n");
+	printf("Level up available!\nLevel health(h), mana(m), attack(a), or defense(d)?\n");
 	char input[MAX_INPUT_LENGTH];
 	for(;;) {
 		getInput(input, ">> ");

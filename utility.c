@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+//#include <stdio_ext.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -47,8 +48,9 @@ int case_compare(const char *word1, const char *word2) {
 
 void getInput(char input[], char message[]) {
 	printf("%s", message);
+	//__fpurge(stdin);
 	if(fgets(input, MAX_INPUT_LENGTH, stdin) == NULL) {
-		printf("An error has occurred, fgets() returned NULL.\n");
+		fprintf(stderr, "An error has occurred, fgets() returned NULL.\n");
 	}
 	assert(strlen(input) > 0);
 	if(input[strlen(input)-1] == '\n') { // For proper line spacing

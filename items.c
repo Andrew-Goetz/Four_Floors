@@ -35,7 +35,6 @@ void demon_fire(Character *user, Character *c) {
 
 /* Stuns enemy for one turn */
 void light_vial(Character *user, Character *c) {
-	assert(!user->isMonster);
 	const char LIGHT_VIAL_DAMAGE = (c->isMonster == WRAITH) ? 5 : 1;
 	c->health -= LIGHT_VIAL_DAMAGE;
 	c->effect = STUN;
