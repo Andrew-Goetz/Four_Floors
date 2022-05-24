@@ -108,7 +108,7 @@ static const char *ITEM_AND_SPELL_NAMES[16] = {
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"Find powerful items and potions in the mansion.",
 
-	"The magic of the southern deserts. The fire radiates with a blue, magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.\n",
+	"The magic of the southern deserts. The fire radiates with a blue, magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.",
 	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.",
 	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.",
 	"The magic of the martyrs and their noble sacrifices.\n Reduces caster health to 1. If caster is attacked the following turn, caster takes no damage and the enemy's health is reduced to 1.",

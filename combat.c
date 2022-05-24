@@ -49,7 +49,8 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			if(!c->potionSlot) {
 				isYes = yes_or_no("\n");
 			} else {
-				printf("%s", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				printf("%s currently has %d/%d health and %u/%u mana.\n", c->name, c->health, c->totalHealth, c->mana, c->totalMana);
+				printf(" %s", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 				isYes = yes_or_no(" will be used before being discarded.\n");
 			}
 			if(isYes) {

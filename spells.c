@@ -75,16 +75,16 @@ void castSpell(Character *c, Character *m) {
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
 	for(int i = 1; i < SPELLS_IN_GAME; i++) {
-		//printf("\n%d\n", c->knowSpell[i]);
+		//printf("DEBUG: %d\n", c->knowSpell[i]);
 		if(c->knowSpell[i]) {
-			//printf("IMPORTANT DEBUG: %d\n", i);
+			//printf("DEBUG: %d\n", i);
 			isMagicUser++;
 			firstSpell = i; /* corresponds to value of spell in the enum */
 		}
 	}
 	//printf("DEBUG: isMagicUser = %d", isMagicUser);
 	if(isMagicUser == 1) { // cast whatever 1 spell the player knows
-		printf("firstSpell: %d, FIREBALL: %d\n", firstSpell, FIREBALL);
+		//printf("DEBUG: firstSpell: %d, FIREBALL: %d\n", firstSpell, FIREBALL);
 		switch(firstSpell) {
 			case FIREBALL:
 				fireball(c, m);
@@ -106,7 +106,7 @@ void castSpell(Character *c, Character *m) {
 				break;
 		}
 	} else if(isMagicUser > 1) { // output spells the player knows and have them pick one
-		printf("What spell to cast?\n");
+		printf("What spell to cast? (type 'none(n)' to cancel)\n");
 		if(c->knowSpell[1]) { // FIREBALL
 			printf("Fireball(f)? ");
 		} if(c->knowSpell[2]) { // LIGHTNING_STAKE
@@ -123,22 +123,26 @@ void castSpell(Character *c, Character *m) {
 		/* Need to check knowSpell during input too, make sure user doesn't guess a spell they don't know */
 		for(;;) {
 			getInput(input, ">> ");
-			if(c->knowSpell[1] && (case_compare(input, "Fireball") == 0 || case_compare(input, "f") == 0)) {
+			if(c->knowSpell[1] && (case_compare(input, ITEM_AND_SPELL_NAMES[FIREBALL]) == 0 || case_compare(input, "f") == 0)) {
 				fireball(c, m);
 				break;
-			} else if(c->knowSpell[2] && (case_compare(input, "Lightning Stake") == 0 || case_compare(input, "L") == 0)) {
+			} else if(c->knowSpell[2] && (case_compare(input, ITEM_AND_SPELL_NAMES[LIGHTNING_STAKE]) == 0 || case_compare(input, "L") == 0)) {
 				lightning_stake(c, m);
 				break;
-			} else if(c->knowSpell[3] && (case_compare(input, "Summon Sheep") == 0 || case_compare(input, "s") == 0)) {
+			} else if(c->knowSpell[3] && (case_compare(input, ITEM_AND_SPELL_NAMES[SUMMON_SHEEP]) == 0 || case_compare(input, "s") == 0)) {
 				summon_sheep(c, m);
 				break;
-			} else if(c->knowSpell[4] && (case_compare(input, "Sacrificial Brand") == 0 || case_compare(input, "b") == 0)) {
+			} else if(c->knowSpell[4] && (case_compare(input, ITEM_AND_SPELL_NAMES[SACRIFICIAL_BRAND]) == 0 || case_compare(input, "b") == 0)) {
 				sacrificial_brand(c, m);
 				break;
-			} else if(c->knowSpell[5] && (case_compare(input, "Frost Resonance") == 0 || case_compare(input, "r") == 0)) {
+			} else if(c->knowSpell[5] && (case_compare(input, ITEM_AND_SPELL_NAMES[FROST_RESONANCE]) == 0 || case_compare(input, "r") == 0)) {
 				frost_resonance(c, m);
 				break;
-			} else {
+			}  else if(case_compare(input, "none") == 0 || case_compare(input, "n") == 0) {
+				printf("Ok then.\n");
+				return; // don't end turn here
+			}
+			else {
 				printf("Invalid input.\n");
 			}
 		}
