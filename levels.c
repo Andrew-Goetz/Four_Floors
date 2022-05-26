@@ -7,7 +7,7 @@
 /* Floor 1 start */
 void lvl0(Character *c) {
 	printf("Press enter to advance through dialogue."); pressEnter();
-	printf("\n----------Level 0----------\n");
+	printf(C_GREEN "\n---------- Level 0 ----------\n" C_RESET);
 	printf("A forest of trees surrounds a clearing; it is here that a massive,"
 			" four-floor mansion towers above the forest."); pressEnter();
 	printf(C_BLUE "%s " C_RESET "wonders: what might lie on the fourth floor?", c->name); pressEnter();
@@ -28,7 +28,7 @@ void lvl0(Character *c) {
 }
 
 void lvl1(Character *c) {
-	printf(C_GREEN "\n----------Level 1----------\n" C_RESET);
+	printf(C_GREEN "\n---------- Level 1 ----------\n" C_RESET);
 	printf("Looking at %s on the ground, %s notices a strange brand near the beast's torso. "
 		   "Maybe it's important.", MONSTER_NAMES[BEAST], c->name); pressEnter();
 	printf("With the first foe defeated, it is time to move on! Press enter to continue deeper into the mansion."); pressEnter();
@@ -60,7 +60,7 @@ void lvl1(Character *c) {
 
 /* Floor 2 start */
 void lvl2(Character *c) {
-	printf(C_GREEN "\n----------Level 2----------\n" C_RESET);
+	printf(C_GREEN "\n---------- Level 2 ----------\n" C_RESET);
 	printf("%s droops to the ground, then magically shrinks back down to normal size.", MONSTER_NAMES[KILLER_PLANT]); pressEnter();
 	printf("Whoever spoke earlier is gone; there is only silence."); pressEnter();
 	//printf("The game has been saved!\n"); pressEnter();
@@ -68,7 +68,7 @@ void lvl2(Character *c) {
 	printf("A faded red carpet lines the stairs and continues into the dark hallway beyond."); pressEnter();
 	item_or_spell_found(c, BLUE_POTION, "Right at the top of the stairs is a potion!\n");
 	printf("%s is now surrounded by darkness, but notices a faint light coming from the right.", c->name); pressEnter();
-	bool isYes = yes_or_no("Follow the source of light?");
+	bool isYes = yes_or_no("Follow the source of light?\n");
 	if(isYes) {
 		printf("%s turns right in an attempt to escape the darkness.", c->name); pressEnter();
 		printf("The light grows brighter as %s continues down the corridor.", c->name); pressEnter();
@@ -78,16 +78,16 @@ void lvl2(Character *c) {
 	} else {
 		printf("%s opts to continue on the main path.", c->name); pressEnter();
 		printf("Walking forward, %s almost falls into a massive hole in the floor. It seems to have no bottom.", c->name); pressEnter();
-		isYes = yes_or_no("Jump into the hole?");
+		isYes = yes_or_no("Jump into the hole?\n");
 		if(isYes) {
 			printf("%s jumps into the abyss but immediately lands on something soft... It's a sheep?", c->name); pressEnter();
 			printf("The sheep has wings, and majestically flies %s back to safety.", c->name); pressEnter();
-			item_or_spell_found(c, SUMMON_SHEEP, "The sheep has a magic scroll in its mouth!");
+			item_or_spell_found(c, SUMMON_SHEEP, "The sheep has a magic scroll in its mouth!\n");
 			printf("The sheep disappears. %s is unsure if it was a hallucination or not.", c->name); pressEnter();
 		} else {
 			printf("%s makes the sensible decision not to jump into the hole.", c->name); pressEnter();
 		}
-		printf("Continuing on the path, %s notices a slight glimmer on the floor.", c->name); pressEnter();
+		printf("Continuing on the path, %s notices a glimmer on the floor.", c->name); pressEnter();
 		printf("It's a huge claymore, unfortunately shattered and unusable."); pressEnter();
 		item_or_spell_found(c, TEARS, "Next to the sword is a vial of some liquid.\n");
 		printf("%s reaches a door at the end of the hallway. Press enter to open it.", c->name); pressEnter();
@@ -104,17 +104,19 @@ void lvl2(Character *c) {
 
 /* Floor 3 start */
 void lvl3(Character *c) {
-	printf(C_GREEN "\n----------Level 3----------\n" C_RESET);
+	printf(C_GREEN "\n---------- Level 3 ----------\n" C_RESET);
 	printf("The wraith lets out a high pitched shriek as it bursts into blue flames."); pressEnter();
-	printf("The black robe drifts elegantly to the floor, while the scythe slams into the wall behind."); pressEnter();
+	printf("The black robe drifts elegantly to the floor, while the weighty scythe slams into the wall behind."); pressEnter();
 	bool isYes = yes_or_no("Investigate the broken wall?");
 	if(isYes) {
-		printf("Behind the wall is a small room; it's dusty, but a lit candle hints at the rooms recent occupancy by someone, or something."); pressEnter();
+		printf("Behind the wall is a small room; it's dusty, but a lit candle hints at the room's recent occupancy."); pressEnter();
 		printf("Endless pieces of paper cover a small desk. Press enter to see what lies beneath."); pressEnter();
-		item_or_spell_found(c, GREATER_RED_POTION, "Underneath the page is a potion, bearing the same rune as the Beast did.");
+		item_or_spell_found(c, GREATER_RED_POTION, "Underneath the mess is a potion, bearing the same rune as the Beast did.\n");
+		printf("");
 	} else {
 		printf("%s ignores the wall, instead opening a door at the far end of the room.", c->name); pressEnter();
 	}
+	printf("It leads to a narrow staircase leading upwards, to the 3rd floor of the mansion.");
 
 
 
@@ -123,27 +125,27 @@ void lvl3(Character *c) {
 	
 	
 	printf("\"You will pay for this!\" This voice... it's the same voice as on the second floor!"); pressEnter();
-	printf("The old man who steps forward wears a wizard's hat, and has a crazy look in his eye."); pressEnter();
+	printf("The old man who steps forward wears a wizard's hat. His mad, red eyes gaze violently at %s.", c->name); pressEnter();
 	Character *m = newCharacter(" appears!", MAD_WIZARD);
 	combat_sequence(c, m, 2);
 }
 
 void lvl4(Character *c) {
-	printf(C_GREEN "\n----------Level 4----------\n" C_RESET);
+	printf(C_GREEN "\n---------- Level 4 ----------\n" C_RESET);
 	printf("%s mutters a name in his dying breath: \"Elizabeth...\"", MONSTER_NAMES[MAD_WIZARD]); pressEnter();
 	printf("Behind him, %s sees a number of books, personal notes written by the deceased man.", c->name); pressEnter();
 	bool isYes = yes_or_no("Read the open page?");
 	if(isYes) {
 
 	} else {
-
+		printf("There is no time to lose: %s opts to continue down the corridor", c->name); pressEnter();
 	}
 
 
 
 	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue?");
 	if(isYes) {
-		item_or_spell_found(c, SACRIFICIAL_BRAND, "");
+		item_or_spell_found(c, SACRIFICIAL_BRAND, "\n");
 	}
 	Character *m = newCharacter(" appears!", GOLEM);
 	combat_sequence(c, m, 3);
@@ -151,13 +153,13 @@ void lvl4(Character *c) {
 
 /* Floor 4 start */
 void lvl5(Character *c) {
-	printf(C_RED "\n----------Final Level----------\n" C_RESET);
+	printf(C_RED "\n---------- Final Level ----------\n" C_RESET);
 	// printf("%s crumbles into pieces."); pressEnter();
-	item_or_spell_found(c, GREATER_BLUE_POTION, "At the heart of the creature is a potion!");
+	item_or_spell_found(c, GREATER_BLUE_POTION, "At the heart of the creature is a potion!\n");
 	printf("Suddenly, a bookshelf on the far wall slides aside, revealing stairs to the fourth floor!"); pressEnter();
 
 	printf("Press enter to climb the stairs to the fourth floor the mansion."); pressEnter();
-	item_or_spell_found(c, PANACEA, "On a pedastal in the center of the hall is a beautiful, rainbow-colored potion.");
+	item_or_spell_found(c, PANACEA, "On a pedastal in the center of the hall is a beautiful, rainbow-colored potion.\n");
 	printf("At the end of the hall lies a foreboding pair of black doors. Press enter to open them."); pressEnter();
 	printf("The next room is extravagantly decorated; stained glass windows adorn the walls, and a cloaked figure sits upon a magnificent throne."); pressEnter();
 	printf("He rises slowly from his throne, his crimson-red eyes striking fear into %s's heart.", c->name); pressEnter();
@@ -179,7 +181,7 @@ void lvl5(Character *c) {
 
 void the_end(Character *c) {
 	printf("Human or vampire, a child left alone will surely die of hunger and solitude.\n"); pressEnter();
-	bool isYes = yes_or_no("A decision must be made: kill the child (yes) or spare him, taking him home with you (no)?");
+	bool isYes = yes_or_no("A decision must be made: kill the child (Yes) or spare him, taking him home with you (No)?\n");
 	if(isYes) {
 
 	} else {

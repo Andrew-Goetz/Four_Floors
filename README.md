@@ -42,11 +42,13 @@ Have fun.
 - [x] Level 2
 - [ ] Enemy casts spells
 - [ ] Level 3
+- [ ] Buffs (defense increase and attack/health increase effects)
 - [ ] Level 4
+- [ ] Enemies have different attack types, chosen at random
 - [ ] Level 5
 - [ ] Ending
 - [ ] Save Files
-- [ ] Finishing Touches/Balancing
+- [ ] Finishing Touches/Testing/Balancing
 - [ ] Colors!
 
 ## Licensing

@@ -49,8 +49,8 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			if(!c->potionSlot) {
 				isYes = yes_or_no("\n");
 			} else {
-				printf("%s currently has %d/%d health and %u/%u mana.\n", c->name, c->health, c->totalHealth, c->mana, c->totalMana);
-				printf(" %s", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				printf(" %s currently has %d/%d health and %u/%u mana.\n", c->name, c->health, c->totalHealth, c->mana, c->totalMana);
+				printf("%s", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 				isYes = yes_or_no(" will be used before being discarded.\n");
 			}
 			if(isYes) {
@@ -58,7 +58,8 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 					usePotion(c, false);
 				}
 				c->potionSlot = itemFound;
-				printf("%s is now in potion inventory\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
+				sleep_ms(SLEEP_DURATION);
+				printf("%s is now in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 			} else {
 				if(c->potionSlot) {
 					printf("%s remains in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
@@ -99,6 +100,10 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 /* For now, applying a new status effect overwrite current status effect */
 //TODO maybe remove turn_number argument?? should be handled fine in combat_sequence
 void status_effect_check(Character *c) {
+	if(c->effectDuration == 0)
+		c->effect = NONE;
+	else
+		c->effectDuration -= 1;
 	switch(c->effect) {
 		case NONE:
 			return;
@@ -116,20 +121,26 @@ void status_effect_check(Character *c) {
 			}
 			break;
 		case DRAIN:
+			//@TODO
 			break;
 		case DEFENSE_UP:
+			//@TODO
 			break;
 		case ATTACK_AND_HEALTH_UP:
+			//@TODO
 			break;
 		case TEARS_ACTIVE:
+			if(c->health <= 0) {
+				c->health = c->totalHealth;
+				printf("The tears of a forgotten hero grant your wish. %s takes fatal damage, but has health restored to full!\n", c->name);
+			} else {
+				printf("The warm glow fades away, the hero's wish unfulfilled.\n");
+			}
 			break;
 		case BRAND_ACTIVE:
+			//@TODO
 			break;
 	}
-	if(c->effectDuration == 0)
-		c->effect = NONE;
-	else
-		c->effectDuration -= 1;
 }
 
 /** Function called once each level when combat is in progress.
@@ -143,7 +154,12 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	unsigned char status_effect_count = 0;
 	bool isTurnChanged;
 	for(;;) {
+		/* Player turn */
 		status_effect_check(c);
+		if(c->health <= 0) { // status_effect_check can alter c->health
+			printf("%s has been defeated!\n", c->name);
+			free(m); free(c); exit(0);
+		}
 		actions(c, m);
 		if(m->health <= 0) {
 			sleep_ms(SLEEP_DURATION);
@@ -156,16 +172,13 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			break;
 		}
 		isTurnChanged = c->isTurn;
+		/* Monster turn */
 		if(!c->isTurn) {
 			status_effect_check(m);
 			monsterAction(m, c);
 		}
-		if(c->health <= 0) {
-			printf("%s has been defeated!\n", c->name);
-			free(m); free(c); exit(0);
-		}
 		/* want to make sure turn_number not incremented on help or other non-isTurn-changing instructions */
-		if(isTurnChanged != c->isTurn) {
+		if(isTurnChanged != c->isTurn && c->health != 0) {
 			if(turn_number == 255) {
 				printf("After so long fighting, %s collapses in exhaustion. Defeat!\n", c->name);
 				free(m); free(c); exit(0);

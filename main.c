@@ -11,7 +11,7 @@ int main() {
 	//lvl3(c);
 	//lvl4(c);
 	//lvl5(c);
-	the_end(c);
+	//the_end(c);
 
 	free(c);
 	return 0;

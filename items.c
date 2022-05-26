@@ -5,9 +5,11 @@
 #include "defs.h"
 
 void tears(Character *c) {
+	assert(!c->isMonster);
 	printf("%s drinks the %s. %s glows warmly.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot], c->name);
-	//return TEARS_ACTIVE;
-	//@TODO needs to toggle some status for the character that only lasts a turn
+	c->effect = TEARS_ACTIVE;
+	c->effectDuration = EFFECT_DURATIONS[TEARS_ACTIVE];
+	/* Rest implemented in status_effect_check */
 }
 
 /* Increases defense for 3 turns */

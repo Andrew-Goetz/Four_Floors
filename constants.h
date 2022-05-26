@@ -27,10 +27,10 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Player Character */	{5, 3, 2, 1},
 	/* Beast */ 			{5, 0, 2, 0},
 	/* Killer Plant */ 		{9, 0, 2, 1}, /* Almost 1 shot by fireball */
-	/* Wraith */ 			{8, 2, 3, 1}, /* Almost 1 shot by light vial */
-	/* Mad Wizard */ 		{7, 5, 1, 0}, /* Immune to magic, casts a lot of spells */
-	/* Wizard's Golem */ 	{10, 0, 4, 3}, /* All physical damage so iron pellet good against him */
-	/* Vampire Lord */		{9, 3, 4, 2}
+	/* Wraith */ 			{8, 2, 3, 1}, /* Increased damage from light vial */
+	/* Mad Wizard */ 		{10, 5, 1, 0}, /* Immune to magic, casts a lot of spells */
+	/* Wizard's Golem */ 	{12, 0, 4, 3}, /* All physical damage so iron pellet good against him */
+	/* Vampire Lord */		{11, 3, 4, 2}
 };
 
 /* To make accessing above array less annoying */
@@ -69,9 +69,10 @@ typedef enum STATUS_EFFECTS {
 /* How long each status effect is active, calculated in combat_sequence().
  * Position in array corresponds to STATUS_EFFECTS enum.
  * Some effects (STUN, for instance) will be changed to a different duration on occasion, these are just defaults.
+ * TODO should DEFENSE_UP and ATTACK_AND_HEALTH_UP just last whole fight?
  */ 
 static const int EFFECT_DURATIONS[STATUS_EFFECT_NUM] = {
-	0, 1, 2, 2, 3, 3, 1, 1
+	0, 2, 2, 2, 3, 3, 1, 1
 };
 
 typedef enum ITEMS_AND_SPELLS {
@@ -83,7 +84,7 @@ typedef enum ITEMS_AND_SPELLS {
 	SUMMON_SHEEP,
 	SACRIFICIAL_BRAND,
 	FROST_RESONANCE,
-	/* BuffItems(6-10) */
+	/* Potions(6-10) */
 	RED_POTION,
 	GREATER_RED_POTION,
 	BLUE_POTION,
