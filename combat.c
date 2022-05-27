@@ -5,8 +5,10 @@
 #include "constants.h"
 #include "defs.h"
 
-/** When not the players turn, the monster does something: as of right now, it will always attack */
-//TODO: should this be where status effects for monster are checked?
+/** When not the players turn, the monster performs an action.
+ *  Default is simply attacking.
+ *  Several monsters will have different abilities/spells, casted at random.
+ */
 void monsterAction(Character *m, Character *c) {
 	assert(m->isMonster && !c->isMonster);
 	if(c->isTurn)
@@ -16,7 +18,45 @@ void monsterAction(Character *m, Character *c) {
 	sleep_ms(SLEEP_DURATION);
 	if(m->effect == STUN)
 		return;
-	meleeAttack(m, c);
+	int r = rand() % 100;
+	switch(m->isMonster) {
+		case WRAITH:
+			//TODO: maybe some attack that adds DRAIN affliction?
+			meleeAttack(m, c);
+			break;
+		case MAD_WIZARD:
+			if(m->mana == 0) {
+				meleeAttack(m, c);
+				break;
+			}
+			switch(r % 4) {
+				case 0:
+					fireball(m, c);
+					break;
+				case 1:
+					lightning_stake(m, c);
+					break;
+				case 2:
+					frost_resonance(m, c);
+					break;
+				case 3:
+					meleeAttack(m, c);
+					break;
+			}
+			break;
+		case GOLEM:
+			//TODO: will have normal attack and heavy attack that stuns
+			meleeAttack(m, c);
+			break;
+		case VAMPIRE_LORD:
+			//TODO: several attack types and spell types
+			meleeAttack(m, c);
+			break;
+		default:
+			printf("%s seems confused.\n", m->name);
+			meleeAttack(m, c);
+			break;
+	}
 }
 
 /** Ask user to equip item, potion, or spell found.

@@ -43,7 +43,7 @@ typedef enum STATS {
 } Stat;
 
 typedef enum ENEMY_TYPES {
-	PLAYER,
+	PLAYER, //Player character, with value 0, so c->isMonster can act as bool
 	BEAST,
 	KILLER_PLANT,
 	WRAITH,

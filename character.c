@@ -50,7 +50,7 @@ Character* newCharacter(char message[], Enemy enemy) {
 	} else {
 		//assert(sizeof(MONSTER_NAMES[enemy])/sizeof(char) < 100);
 		strcpy(c->name, MONSTER_NAMES[enemy]);
-		printf("%s appears!\n", c->name);
+		printf("%s%s\n", c->name, message);
 	}
 	return c;
 }

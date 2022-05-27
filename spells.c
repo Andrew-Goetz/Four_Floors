@@ -23,12 +23,14 @@ void fireball(Character *caster, Character *c) {
 
 void lightning_stake(Character *caster, Character *c) {
 	printf("%s casts lightning stake!\n", caster->name);
+	caster->mana -= 1;
 	c->effect = STUN;
 	c->effectDuration = 1;
 }
 
 /* One in a hundred chance of sheep exploading, dealing SHEEP_DAMAGE damage. */
 void summon_sheep(Character *caster, Character *c) {
+	caster->mana -= 1;
 	const unsigned char sheep_explosion = rand() % 100;
 	printf("%s summons a sheep!\n", caster->name);
 	sleep_ms(SLEEP_DURATION);
