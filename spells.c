@@ -53,6 +53,7 @@ void sacrificial_brand(Character *caster, Character *c) {
 	/* Most logic for this function has to be in meleeAttack */
 	printf("%s engraves a holy rune upon the skin.", caster->name);
 	caster->health = 1;
+	caster->mana -= 
 	caster->effect = BRAND_ACTIVE;
 	caster->effectDuration = EFFECT_DURATIONS[BRAND_ACTIVE];
 	sleep_ms(SLEEP_DURATION);
@@ -63,12 +64,11 @@ void frost_resonance(Character *caster, Character *c) {
 	printf("%s forms a frosty mist in the air, which surrounds %s.\n", caster->name, c->name);
 	sleep_ms(SLEEP_DURATION);
 	const char FROST_RESONANCE_DAMAGE = 2;
-	const char FROST_RESONANCE_MANA = 3;
-	caster->mana -= FROST_RESONANCE_MANA;
+	caster->mana -= SPELL_COSTS[FROST_RESONANCE];
 	c->health -= FROST_RESONANCE_DAMAGE;
-	c->effect = STUN;
-	c->effectDuration = 1;
-	printf("%s takes %d damages, and freezes for a turn from the cold!\n", c->name, FROST_RESONANCE_DAMAGE);
+	c->effect = POISON;
+	c->effectDuration = EFFECT_DURATIONS[POISON];
+	printf("%s takes %d damages, and freezes, taking damage over time from the cold!\n", c->name, FROST_RESONANCE_DAMAGE);
 }
 
 void castSpell(Character *c, Character *m) {

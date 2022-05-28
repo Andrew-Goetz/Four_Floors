@@ -25,24 +25,26 @@ void monsterAction(Character *m, Character *c) {
 			meleeAttack(m, c);
 			break;
 		case MAD_WIZARD:
-			if(m->mana == 0) {
-				meleeAttack(m, c);
-				break;
-			}
-			switch(r % 4) {
+			switch(r % 4) { //We fall through to default if not enough mana
 				case 0:
-					fireball(m, c);
-					break;
+					if(m->mana >= SPELL_COSTS[FIREBALL]) {
+						fireball(m, c);
+						break;
+					}
 				case 1:
-					lightning_stake(m, c);
-					break;
+					if(m->mana >= SPELL_COSTS[LIGHTNING_STAKE]) {
+						lightning_stake(m, c);
+						break;
+					}
 				case 2:
-					frost_resonance(m, c);
-					break;
-				case 3:
+					if(m->mana >= SPELL_COSTS[FROST_RESONANCE]) {
+						frost_resonance(m, c);
+						break;
+					}
+				default:
 					meleeAttack(m, c);
 					break;
-			}
+			} //end switch(r % 4)
 			break;
 		case GOLEM:
 			//TODO: will have normal attack and heavy attack that stuns

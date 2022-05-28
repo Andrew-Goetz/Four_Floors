@@ -28,7 +28,7 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Beast */ 			{5, 0, 2, 0},
 	/* Killer Plant */ 		{9, 0, 2, 1}, /* Almost 1 shot by fireball */
 	/* Wraith */ 			{8, 2, 3, 1}, /* Increased damage from light vial */
-	/* Mad Wizard */ 		{10, 5, 1, 0}, /* Immune to magic, casts a lot of spells */
+	/* Mad Wizard */ 		{10, 7, 1, 0}, /* Immune to magic, casts a lot of spells */
 	/* Wizard's Golem */ 	{12, 0, 4, 3}, /* All physical damage so iron pellet good against him */
 	/* Vampire Lord */		{11, 3, 4, 2}
 };
@@ -98,6 +98,11 @@ typedef enum ITEMS_AND_SPELLS {
 	HORN_OF_SAUL
 } Item;
 
+/* Mana cost of spells */
+static const char SPELL_COSTS[SPELLS_IN_GAME] = {
+	0, 1, 2, 1, 4, 2
+};
+
 /* Item/spell descriptions and names, be precise about health and mana info but not specific on attack/defense effects */
 static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Nothing",
@@ -110,16 +115,16 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"Find powerful items and potions in the mansion.",
 
 	"The magic of the southern deserts. The fire radiates with a blue, magical energy.\nLaunches a fireball at enemies. Consumes 1 mana.",
-	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings.",
-	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode.",
-	"The magic of the martyrs and their noble sacrifices.\n Reduces caster health to 1. If caster is attacked the following turn, caster takes no damage and the enemy's health is reduced to 1.",
-	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime.",
+	"The magic of the dragon slayers of old.\nSmash lightning into the earth, shocking surroundings. Consumes 2 mana.",
+	"The magic of the mad wizard Pizel.\nSummons a sheep. The magic is unstable, so the sheep may explode. Consumes 1 mana.",
+	"The magic of the martyrs and their noble sacrifices.\n Reduces caster health to 1. If caster is attacked the following turn, caster takes no damage and the enemy's health is reduced to 1. Consumes 4 mana.",
+	"The magic of the northern icemen.\nEnvelops enemy in frost, dealing damage overtime. Consumes 2 mana.",
 
 	"A red, slimy liquid. Doesn't taste as good as it looks.\nRestores 3 health when used.",
 	"A red, slimy liquid. Tastes stronger than the regular potion.\nRestores 5 health when used.",
 	"A blue, cold liquid. Is viscous, like syrup.\nRestores 3 mana when used.",
 	"A blue, cold liquid. Even thicker than the regular potion.\nRestores 5 mana when used.",
-	"The cure-all spoken of in ancient legends. The potion glimmers a brilliant gold.\nRemoves any negative status effects, such as poison.",
+	"The cure-all spoken of in ancient legends. The potion glimmers a brilliant gold.\nRemoves any negative status effects, such as poison, and restores health and mana to full.",
 
 	"The tears of a fallen hero and his broken promise.\nUsing immediately before a monster deals fatal damage restores health to full.",
 	"A foul tasting, chewy medicine. Used by warriors from the east.\nUsing makes one's skin solid as iron for a short time, increasing defense.",
