@@ -18,7 +18,6 @@ void lvl0(Character *c) {
 				"Maybe it's for the best.\n", c->name);
 		free(c); exit(0);
 	}
-	//printf("The game has been saved!\n"); pressEnter();
 	printf("The doors creak open." C_BLUE " %s " C_RESET "enters the mansion.", c->name); pressEnter();
 	printf("Light streams into the mansion, revealing the dust floating in the air."); pressEnter();
 	printf("SLAM! The door closes behind %s!", c->name); pressEnter();
@@ -34,7 +33,6 @@ void lvl1(Character *c) {
 	printf("With the first foe defeated, it is time to move on! Press enter to continue deeper into the mansion."); pressEnter();
 	item_or_spell_found(c, RED_POTION, "After walking down a hallway, a potion can be seen sitting on a bookshelf.\n");
 	drink_potion(c);
-	//printf("The game has been saved!\n"); pressEnter();
 	printf("%s enters a massive room with another hallway branching off to the left.", c->name); pressEnter();
 	bool isYes = yes_or_no("Take this other path?\n");
 	if(isYes) {
@@ -48,7 +46,6 @@ void lvl1(Character *c) {
 		item_or_spell_found(c, DEMON_FIRE, "In a tattered robe on the floor is a mysterious vial of liquid.\n");
 		printf("The door is charred black; despite this, %s manages to force it open.", c->name); pressEnter();
 	}
-	//printf("The game has been saved!\n"); pressEnter();
 	printf("In the next room, %s sees a staircase. This must lead to the second floor!", c->name); pressEnter();
 	printf("The distant voice of an elderly man echoes mysteriously in the distance: "
 			"\"Begone from this place, stranger!\""); pressEnter();
@@ -63,7 +60,6 @@ void lvl2(Character *c) {
 	printf(C_GREEN "\n---------- Level 2 ----------\n" C_RESET);
 	printf("%s droops to the ground, then magically shrinks back down to normal size.", MONSTER_NAMES[KILLER_PLANT]); pressEnter();
 	printf("Whoever spoke earlier is gone; there is only silence."); pressEnter();
-	//printf("The game has been saved!\n"); pressEnter();
 	printf("It is time to move on. Press enter to proceed up the stairs to the second floor."); pressEnter();
 	printf("A faded red carpet lines the stairs and continues into the dark hallway beyond."); pressEnter();
 	item_or_spell_found(c, BLUE_POTION, "Right at the top of the stairs is a potion!\n");
@@ -93,7 +89,6 @@ void lvl2(Character *c) {
 		printf("%s reaches a door at the end of the hallway. Press enter to open it.", c->name); pressEnter();
 	} //end else
 	drink_potion(c);
-	//printf("The game has been saved!\n"); pressEnter();
 	printf("Press enter to open the door and continue."); pressEnter();
 	printf("Immediately upon entering the room %s feels an unatural presence.", c->name); pressEnter();
 	printf("The room is ice cold, and a cold breeze blows the door shut!"); pressEnter();
@@ -112,19 +107,26 @@ void lvl3(Character *c) {
 		printf("Behind the wall is a small room; it's dusty, but a lit candle hints at the room's recent occupancy."); pressEnter();
 		printf("Endless pieces of paper cover a small desk. Press enter to see what lies beneath."); pressEnter();
 		item_or_spell_found(c, GREATER_RED_POTION, "Underneath the mess is a potion, bearing the same rune as the Beast did.\n");
-		printf("");
+		printf("In the lamplight, %s sees a ladder upwards, to the 3rd floor of the mansion.", c->name); pressEnter();
 	} else {
 		printf("%s ignores the wall, instead opening a door at the far end of the room.", c->name); pressEnter();
+		printf("It leads to a narrow staircase leading upwards, to the 3rd floor of the mansion.");
 	}
-	printf("It leads to a narrow staircase leading upwards, to the 3rd floor of the mansion.");
-
-
-
+	printf("%s follows a narrow, poorly lit hallway, reaching a crossroad. The new path left is faintly lighter.", c->name); pressEnter();
+	isYes = yes_or_no("Proceed left down this new path?");
+	if(isYes) {
+		//TODO
+		item_or_spell_found(c, DEMON_FIRE, "");
+	} else {
+		//TODO
+		item_or_spell_found(c, HORN_OF_SAUL, "");
+	}
+	printf("The door opens to a magnificently bright room with massive windows adorned with elegant white curtains."); pressEnter();
+	printf("%s can see the tops of trees further below. %s has come a long way on the journey so far, an admirable feat.", c->name, c->name); pressEnter();
 	drink_potion(c);
-	//printf("The game has been saved!\n"); pressEnter();
-	
-	
-	printf("\"You will pay for this!\" This voice... it's the same voice as on the second floor!"); pressEnter();
+	printf("%s's rest here has come to an end. Press enter to open a harsh, black door at the far end of the room.", c->name); pressEnter();
+	printf("The door slams closed behind %s. Torches illuminate a figure sitting on a large chair at the far end of the room.", c->name); pressEnter();
+	printf("\"You will pay for what you've done!\" This voice... it's the same voice as on the second floor!"); pressEnter();
 	printf("The old man who steps forward wears a wizard's hat. His mad, red eyes gaze violently at %s.", c->name); pressEnter();
 	Character *m = newCharacter(" appears!", MAD_WIZARD);
 	combat_sequence(c, m, 2);

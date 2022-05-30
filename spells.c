@@ -74,6 +74,10 @@ void frost_resonance(Character *caster, Character *c) {
 void castSpell(Character *c, Character *m) {
 	//@TODO check to ensure c has enough mana to cast requested spell
 	assert(!c->isMonster);
+	if(m->isMonster == MAD_WIZARD) {
+		printf("%s tries to cast magic, but %s is a master of the arcane and is immune to all magic!\n", c->name, m->name);
+		sleep_ms(SLEEP_DURATION);
+	}
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
 	for(int i = 1; i < SPELLS_IN_GAME; i++) {
