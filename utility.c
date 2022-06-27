@@ -1,10 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS /* Removes depreciated warnings for strcpy on windows, for linux compatibility */
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
-//#include <stdio_ext.h>
 #include <string.h>
+//#include <stdio_ext.h>
 
 #ifdef _WIN32
 	#include <windows.h>
@@ -59,15 +60,6 @@ void getInput(char input[], char message[]) {
 	//@TODO better handling of input when > MAX_INPUT_LENGTH
 }
 
-/** https://stackoverflow.com/questions/1406421/press-enter-to-continue-in-c 
- *  Also important: don't use \n at end of printf when pressEnter() is called immediately after,
- *  because the user pressing enter already goes to the next line.
- */
-void pressEnter(void) {
-	//printf("%s", message);
-	while(getchar() != '\n');
-}
-
 /** Ask simple yes or no questions to user.
  *  If yes then return true, if no then return false.
  *  When used, returned value is stored in bool isYes (convention).
@@ -85,4 +77,17 @@ bool yes_or_no(char message[]) {
 			printf("Invalid input.\n"); //repeats loop and asks again
 		}
 	}
+}
+
+
+/** Version of printf that requires user to press enter to continue. 
+ *  No \n needed at end of variables.
+ */
+int eprintf(const char *format, ...) {
+	va_list v;
+	va_start(v, format);
+	int ret = vfprintf(stdout, format, v);
+	va_end(v);
+	while(getchar() != '\n');
+	return ret;
 }

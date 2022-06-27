@@ -1,6 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include <stdarg.h>
 #include <stdbool.h>
 
 #include "constants.h"
@@ -9,8 +10,8 @@
 void sleep_ms(int milliseconds);
 int case_compare(const char *word1, const char *word2);
 void getInput(char input[], char message[]);
-void pressEnter(void);
 bool yes_or_no(char message[]);
+int eprintf(const char *format, ...);
 
 // character.c
 typedef struct Character {

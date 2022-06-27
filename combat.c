@@ -55,10 +55,9 @@ void monsterAction(Character *m, Character *c) {
 			meleeAttack(m, c);
 			break;
 		default:
-			printf("%s seems confused.\n", m->name);
 			meleeAttack(m, c);
 			break;
-	}
+	} //end switch(m->isMonster)
 }
 
 /** Ask user to equip item, potion, or spell found.
@@ -69,8 +68,8 @@ void monsterAction(Character *m, Character *c) {
  */
 void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	assert(!c->isMonster);
-	printf("%sPress enter to read its description:", message); pressEnter();
-	printf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]); pressEnter();
+	eprintf("%sPress enter to read its description:", message);
+	eprintf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
 	switch(itemFound) {
 		/* for spells, add to knowSpell, making sure index 0 (NOTHING) is still false */

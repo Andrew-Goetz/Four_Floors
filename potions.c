@@ -81,9 +81,9 @@ void usePotion(Character *c, bool isInCombat) {
 
 /** Asks if player wants to drink potion outside of combat. */
 void drink_potion(Character *c) {
-	printf("%s looks around and sees no enemies; safety, for the time being.", c->name); pressEnter();
+	eprintf("%s looks around and sees no enemies; safety, for the time being.", c->name);
 	if(!c->potionSlot) {
-		printf("It would be the perfect time to drink a potion; unfortunately, %s's potion slot is empty!", c->name); pressEnter();
+		eprintf("It would be the perfect time to drink a potion; unfortunately, %s's potion slot is empty!", c->name);
 		return;
 	}
 	printf("%s currently has %d/%d health and %d/%d mana.\n", c->name, c->health, c->totalHealth, c->mana, c->totalMana);
