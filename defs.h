@@ -15,7 +15,7 @@ int eprintf(const char *format, ...);
 
 // character.c
 typedef struct Character {
-	char name[MAX_INPUT_LENGTH];
+	char name[MAX_INPUT_LENGTH + sizeof(C_BLUE) + sizeof(C_RESET)];
 	char isMonster;
 	bool isTurn;
 

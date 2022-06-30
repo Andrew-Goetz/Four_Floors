@@ -2,7 +2,7 @@
 #define CONSTANTS_H
 
 /*********** Constants ************/
-#define MAX_INPUT_LENGTH 1000/* No input greater than MAX_INPUT_LENGTH characters allowed */
+#define MAX_INPUT_LENGTH 40/* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank (hence the +1) */
 #define STATUS_EFFECT_NUM 8 /* Number of status effects in the game, including NONE status effect */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
@@ -19,7 +19,13 @@
 #define C_RESET   "\x1b[0m"
 
 static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
-	"ERROR", "The Beast", "The Killer Plant", "The Wraith", "The Mad Wizard", "The Wizard's Golem", "The Vampire Lord"
+	"ERROR",
+	C_RED "The Beast" C_RESET,
+	C_RED "The Killer Plant" C_RESET,
+	C_RED "The Wraith" C_RESET,
+	C_RED "The Mad Wizard" C_RESET,
+	C_RED "The Wizard's Golem" C_RESET,
+	C_RED "The Vampire Lord" C_RESET
 };
 
 /* Below goes in order: health, mana, attack, defense */
@@ -106,9 +112,26 @@ static const char SPELL_COSTS[SPELLS_IN_GAME] = {
 /* Item/spell descriptions and names, be precise about health and mana info but not specific on attack/defense effects */
 static const char *ITEM_AND_SPELL_NAMES[16] = {
 	"Nothing",
-	"Fireball", "Lightning Stake", "Summon Sheep", "Sacrificial Brand", "Frost Resonance",/* Spells */
-	"Red Potion", "Greater Red Potion", "Blue Potion", "Greater Blue Potion", "Panacea", /* PotionItems */
-	"Vial of Tears", "Iron Pellet", "Vial of Demon Fire", "Light Vial", "Horn of Saul" /* Items */
+	/* Spells */
+	C_CYAN "Fireball" C_RESET,
+	C_CYAN "Lightning Stake" C_RESET,
+	C_CYAN "Summon Sheep" C_RESET,
+	C_CYAN "Sacrificial Brand" C_RESET,
+	C_CYAN "Frost Resonance" C_RESET,
+
+	/* Potions */
+	C_PURPLE "Red Potion" C_RESET,
+	C_PURPLE "Greater Red Potion" C_RESET,
+	C_PURPLE "Blue Potion" C_RESET,
+	C_PURPLE "Greater Blue Potion" C_RESET,
+	C_PURPLE "Panacea" C_RESET,
+
+	/* Items */
+	C_GREEN "Vial of Tears" C_RESET,
+	C_GREEN "Iron Pellet" C_RESET,
+	C_GREEN "Vial of Demon Fire" C_RESET,
+	C_GREEN "Light Vial" C_RESET,
+	C_GREEN "Horn of Saul" C_RESET
 };
 
 static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {

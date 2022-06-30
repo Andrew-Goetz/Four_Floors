@@ -38,17 +38,22 @@ Character* newCharacter(char message[], Enemy enemy) {
 	c->isMonster = enemy;
 	/* Gets player character's name */
 	if(enemy == PLAYER) {
-		getInput(c->name, "Enter your name: ");
-		printf("Your name is " C_BLUE "\'%s\'" C_RESET ". ", c->name);
+		char buf[MAX_INPUT_LENGTH + sizeof(C_BLUE) + sizeof(C_RESET)];
+		getInput(buf, "Enter your name: ");
+		// This sprintf is safe, I promise
+		sprintf(c->name, "%s%s%s", C_BLUE, buf, C_RESET);
+		printf("Your name is \'%s\'. ", c->name);
 		bool isYes = yes_or_no("Is this correct?\n");
 		while(!isYes) {
-			getInput(c->name, "Enter your name: ");
-			printf("Your name is " C_BLUE "\'%s\'" C_RESET ". ", c->name);
+			memset(buf, 0, MAX_INPUT_LENGTH + sizeof(C_BLUE) + sizeof(C_RESET));
+			getInput(buf, "Enter your name: ");
+			sprintf(c->name, "%s%s%s", C_BLUE, buf, C_RESET);
+			printf("Your name is \'%s\'. ", c->name);
 			isYes = yes_or_no("Is this correct?\n");
 		}
 		c->isTurn = true; // make sure player character gets first turn
 	} else {
-		//assert(sizeof(MONSTER_NAMES[enemy])/sizeof(char) < 100);
+		// This strcpy is safe since we're copying from a buffer of known size
 		strcpy(c->name, MONSTER_NAMES[enemy]);
 		printf("%s%s\n", c->name, message);
 	}
