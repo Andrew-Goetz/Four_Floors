@@ -12,7 +12,7 @@
  * Negative mana not allowed, if not enough mana cannot cast a spell
  * no negative defense, total_damage = attacker's attack - defender's defense
  * if char isMonster == 0, its the player character
- * bool isTurn is only used in player struct, is essentially pointless in monster structs
+ * bool isTurn is only used in player struct, is essentially pointless in monster structs TODO is this still true?
  * elements of knowSpell are true if character knows that spell, corresponds to order of spells in enum
  */
 
@@ -40,7 +40,7 @@ Character* newCharacter(char message[], Enemy enemy) {
 	if(enemy == PLAYER) {
 		char buf[MAX_INPUT_LENGTH + sizeof(C_BLUE) + sizeof(C_RESET)];
 		getInput(buf, "Enter your name: ");
-		// This sprintf is safe, I promise
+		/* This sprintf is safe, I promise */
 		sprintf(c->name, "%s%s%s", C_BLUE, buf, C_RESET);
 		printf("Your name is \'%s\'. ", c->name);
 		bool isYes = yes_or_no("Is this correct?\n");
@@ -51,9 +51,9 @@ Character* newCharacter(char message[], Enemy enemy) {
 			printf("Your name is \'%s\'. ", c->name);
 			isYes = yes_or_no("Is this correct?\n");
 		}
-		c->isTurn = true; // make sure player character gets first turn
+		c->isTurn = true; /* make sure player character gets first turn */
 	} else {
-		// This strcpy is safe since we're copying from a buffer of known size
+		/* This strcpy is safe since we're copying from a buffer of known size */
 		strcpy(c->name, MONSTER_NAMES[enemy]);
 		printf("%s%s\n", c->name, message);
 	}
@@ -68,11 +68,13 @@ void lvlUp(Character *c) {
 	for(;;) {
 		getInput(input, ">> ");
 		if(case_compare(input, "health") == 0 || case_compare(input, "h") == 0) {
-			c->totalHealth++; c->health++;
+			c->health++;
+			c->totalHealth++;
 			printf("%s feels healthier.\n", c->name);
 			return;
 		} else if(case_compare(input, "mana") == 0 || case_compare(input, "m") == 0) {
-			c->totalMana++; c->mana++;
+			c->mana++;
+			c->totalMana++;
 			printf("%s feels more intelligent.\n", c->name);
 			return;
 		} else if(case_compare(input, "attack") == 0 || case_compare(input, "a") == 0) {

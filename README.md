@@ -16,15 +16,15 @@ the program. Then, type ./four_floors to run the game.
 ## Windows
 
 The game does support Windows (clang was tested with an older build of the game), but
-there is currently not an easy way to build it. It is probably easiest to just
-install Windows Subsystem for Linux to get it to run for now, or use some other
-method of installing gcc and make on Windows.
+there is currently not an easy way to build it (too lazy to learn cmake for now). It
+is probably easiest to install Windows Subsystem for Linux to get it to run for now,
+or use some other method of installing gcc and make on Windows.
 
 ## Other
 
 For MacOS, BSD, and other Unix type operating systems, the code is untested but
-probably works. After installing gcc and make, follow the Linux instructions. You
-should receive an error message if the program is unable to run.
+probably still works. After installing gcc and make, follow the Linux instructions.
+You should receive an error message if the program is unable to run.
 
 ## Other Notes
 
@@ -49,7 +49,7 @@ Have fun.
 - [ ] Ending
 - [ ] Save Files
 - [ ] Finishing Touches/Testing/Balancing
-- [ ] Colors!
+- [x] Colors!
 
 ## Licensing
 

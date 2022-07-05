@@ -4,7 +4,7 @@
 /*********** Constants ************/
 #define MAX_INPUT_LENGTH 40/* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank (hence the +1) */
-#define STATUS_EFFECT_NUM 8 /* Number of status effects in the game, including NONE status effect */
+#define STATUS_EFFECT_NUM 9 /* Number of status effects in the game, including NONE status effect */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
 #define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
 
@@ -69,7 +69,9 @@ typedef enum STATUS_EFFECTS {
 	DEFENSE_UP,
 	ATTACK_AND_HEALTH_UP,
 	TEARS_ACTIVE,
-	BRAND_ACTIVE
+	BRAND_ACTIVE,
+	/* Active Effects */
+	PARRY_READY 
 } Effect;
 
 /* How long each status effect is active, calculated in combat_sequence().
@@ -78,7 +80,7 @@ typedef enum STATUS_EFFECTS {
  * TODO should DEFENSE_UP and ATTACK_AND_HEALTH_UP just last whole fight?
  */ 
 static const int EFFECT_DURATIONS[STATUS_EFFECT_NUM] = {
-	0, 2, 2, 2, 3, 3, 1, 1
+	0, 2, 2, 2, 3, 3, 1, 1, 1
 };
 
 typedef enum ITEMS_AND_SPELLS {
@@ -106,7 +108,12 @@ typedef enum ITEMS_AND_SPELLS {
 
 /* Mana cost of spells */
 static const char SPELL_COSTS[SPELLS_IN_GAME] = {
-	0, 1, 2, 1, 4, 2
+	0, /* NOTHING */
+	1, /* FIREBALL */ 
+	2, /* LIGHTNING_STAKE*/
+	1, /* SUMMON_SHEEP */
+	4, /* SACRIFICIAL_BRAND */
+	2  /* FROST_RESONANCE */
 };
 
 /* Item/spell descriptions and names, be precise about health and mana info but not specific on attack/defense effects */

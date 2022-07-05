@@ -8,7 +8,7 @@
 void fireball(Character *caster, Character *c) {
 	printf("%s casts fireball!\n", caster->name);
 	assert(caster->mana != 0);
-	caster->mana -= 1;
+	caster->mana -= SPELL_COSTS[FIREBALL];
 	sleep_ms(SLEEP_DURATION);
 	if(c->isMonster == KILLER_PLANT) {
 		const char FIREBALL_DAMAGE = 7;
@@ -23,14 +23,14 @@ void fireball(Character *caster, Character *c) {
 
 void lightning_stake(Character *caster, Character *c) {
 	printf("%s casts lightning stake!\n", caster->name);
-	caster->mana -= 1;
+	caster->mana -= SPELL_COSTS[LIGHTNING_STAKE];
 	c->effect = STUN;
 	c->effectDuration = 1;
 }
 
 /* One in a hundred chance of sheep exploading, dealing SHEEP_DAMAGE damage. */
 void summon_sheep(Character *caster, Character *c) {
-	caster->mana -= 1;
+	caster->mana -= SPELL_COSTS[SUMMON_SHEEP];
 	const unsigned char sheep_explosion = rand() % 100;
 	printf("%s summons a sheep!\n", caster->name);
 	sleep_ms(SLEEP_DURATION);
@@ -53,7 +53,7 @@ void sacrificial_brand(Character *caster, Character *c) {
 	/* Most logic for this function has to be in meleeAttack */
 	printf("%s engraves a holy rune upon the skin.", caster->name);
 	caster->health = 1;
-	caster->mana -= 
+	caster->mana -= SPELL_COSTS[SACRIFICIAL_BRAND];
 	caster->effect = BRAND_ACTIVE;
 	caster->effectDuration = EFFECT_DURATIONS[BRAND_ACTIVE];
 	sleep_ms(SLEEP_DURATION);
@@ -72,7 +72,6 @@ void frost_resonance(Character *caster, Character *c) {
 }
 
 void castSpell(Character *c, Character *m) {
-	//@TODO check to ensure c has enough mana to cast requested spell
 	assert(!c->isMonster);
 	if(m->isMonster == MAD_WIZARD) {
 		printf("%s tries to cast magic, but %s is a master of the arcane and is immune to all magic!\n", c->name, m->name);
@@ -80,9 +79,14 @@ void castSpell(Character *c, Character *m) {
 	}
 	char isMagicUser = 0;
 	char firstSpell = 0; /* used if(isMagicUser == 1) */
+	char oom = 0;
 	for(int i = 1; i < SPELLS_IN_GAME; i++) {
 		//printf("DEBUG: %d\n", c->knowSpell[i]);
 		if(c->knowSpell[i]) {
+			if(SPELL_COSTS[i] > c->mana) {
+				oom++;
+				continue;
+			}
 			//printf("DEBUG: %d\n", i);
 			isMagicUser++;
 			firstSpell = i; /* corresponds to value of spell in the enum */
@@ -111,17 +115,20 @@ void castSpell(Character *c, Character *m) {
 				printf("Something goes wrong and %s fails to cast the spell!", c->name);
 				break;
 		}
-	} else if(isMagicUser > 1) { // output spells the player knows and have them pick one
+	} else if(isMagicUser > 1) { /* output spells the player knows and have them pick one */
 		printf("What spell to cast? (type 'none(n)' to cancel)\n");
-		if(c->knowSpell[1]) { // FIREBALL
+		if(oom) {
+			printf("(%s lacks %smana%s to cast %d spells.)\n", c->name, C_BLUE, C_RESET, oom);
+		}
+		if(c->knowSpell[1]) { /* FIREBALL */
 			printf("Fireball(f)? ");
-		} if(c->knowSpell[2]) { // LIGHTNING_STAKE
+		} if(c->knowSpell[2]) { /* LIGHTNING_STAKE */
 			printf("Lightning Stake(L)? ");
-		} if(c->knowSpell[3]) { // SUMMON_SHEEP
+		} if(c->knowSpell[3]) { /* SUMMON_SHEEP */
 			printf("Summon Sheep(s)? ");
-		} if(c->knowSpell[4]) { // SACRIFICIAL_BRAND
+		} if(c->knowSpell[4]) { /* SACRIFICIAL_BRAND */
 			printf("Sacrificial Brand(b)? ");
-		} if(c->knowSpell[5]) { // FROST_RESONANCE
+		} if(c->knowSpell[5]) { /* FROST_RESONANCE */
 			printf("Frost Resonance(r)?");
 		}
 		printf("\n");
@@ -146,12 +153,16 @@ void castSpell(Character *c, Character *m) {
 				break;
 			}  else if(case_compare(input, "none") == 0 || case_compare(input, "n") == 0) {
 				printf("Ok then.\n");
-				return; // don't end turn here
+				return; /* don't end turn here */
 			}
 			else {
 				printf("Invalid input.\n");
 			}
-		}
+		} /* end for(;;) */
+	} else if(oom) { /* oom stands for "out of mana" */
+		printf("%s doesn't have enough %smana%s to cast a spell!\n", c->name, C_BLUE, C_RESET);
+		printf("Choose a different action!\n");
+		sleep_ms(SLEEP_DURATION);
 	} else {
 		printf("%s tries to cast magic, but doesn't know how. %s chuckles.\n", c->name, m->name);
 		sleep_ms(SLEEP_DURATION);

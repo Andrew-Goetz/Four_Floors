@@ -5,6 +5,26 @@
 #include "defs.h"
 #include "constants.h"
 
+/** Check if BRAND_ACTIVE is active on an attack */
+bool brand_check(Character *attacker, Character *c) {
+	if(c->effect == BRAND_ACTIVE) {
+		attacker->health = 1;
+		printf("%s is drained of its energy by the brand, leaving %s with %d health!", attacker->name, attacker->name, attacker->health);
+		return true;
+	}
+	return false;
+}
+
+/** Check if PARRY_READY is active on an attack */
+/* Parry damage shall be == (attacker->attack/2)-defender->defense */
+bool parry_check(Character *attacker, Character *c) {
+	if(c->effect == PARRY_READY) {
+
+		return true;
+	}
+	return false;
+}
+
 /** Takes two character, and character attacker and character c.
  *  Checks to make sure arguments are in correct order,
  *  then subtracts c's health by attacker's attack value.
@@ -13,12 +33,10 @@
 void meleeAttack(Character *attacker, Character *c) {
 	printf("%s attacks %s!\n", attacker->name, c->name);
 	sleep_ms(SLEEP_DURATION);
-	if(!attacker->isMonster) attacker->isTurn = false;
-	if(c->effect == BRAND_ACTIVE) {
-		attacker->health = 1;
-		printf("%s is drained of its energy by the brand, leaving %s with %d health!", attacker->name, attacker->name, attacker->health);
-		return;
-	}
+	if(!attacker->isMonster)
+		attacker->isTurn = false;
+	if(brand_check(attacker, c)) return;
+	if(parry_check(attacker, c)) return;
 	char effectiveDamage = attacker->attack - c->defense;
 	if(effectiveDamage > 0) {
 		c->health -= effectiveDamage;

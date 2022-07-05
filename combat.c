@@ -5,6 +5,37 @@
 #include "constants.h"
 #include "defs.h"
 
+/** Special heavy attack used by golem which stuns player a turn */
+void golem_slam(Character *m, Character *c) {
+	assert(m->isMonster == GOLEM && !c->isMonster);
+	//printf("%s ");
+}
+
+/** VAMPIRE_LORD attack variant (unparriable) */
+/* Deals */
+void vampire_thrust(Character *m, Character *c) {
+	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
+	//TODO printf("%s executes a lightning-quick thrust");
+}
+
+/** VAMPIRE_LORD attack variant */
+void vampire_slash(Character *m, Character *c) {
+	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
+
+}
+
+/** VAMPIRE_LORD move that causes him to parry a meleeAttack if done on the next turn */
+void vampire_parry(Character *m, Character *c) {
+	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
+
+}
+
+/** Special vampire spell which drains player of life energy, giving vampire back health */
+void blood_reap(Character *m, Character *c) {
+	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
+	
+}
+
 /** When not the players turn, the monster performs an action.
  *  Default is simply attacking.
  *  Several monsters will have different abilities/spells, casted at random.
@@ -21,11 +52,11 @@ void monsterAction(Character *m, Character *c) {
 	int r = rand() % 100;
 	switch(m->isMonster) {
 		case WRAITH:
-			//TODO: maybe some attack that adds DRAIN affliction?
+			/* TODO: maybe some attack that adds DRAIN affliction? */
 			meleeAttack(m, c);
 			break;
 		case MAD_WIZARD:
-			switch(r % 4) { //We fall through to default if not enough mana
+			switch(r % 4) { /* We fall through to default if not enough mana */
 				case 0:
 					if(m->mana >= SPELL_COSTS[FIREBALL]) {
 						fireball(m, c);
@@ -44,11 +75,15 @@ void monsterAction(Character *m, Character *c) {
 				default:
 					meleeAttack(m, c);
 					break;
-			} //end switch(r % 4)
+			} /* end switch(r % 4) */
 			break;
 		case GOLEM:
 			//TODO: will have normal attack and heavy attack that stuns
-			meleeAttack(m, c);
+			if(r % 5 == 0) {
+				golem_slam(m, c);
+			} else {
+				meleeAttack(m, c);
+			}
 			break;
 		case VAMPIRE_LORD:
 			//TODO: several attack types and spell types
@@ -57,7 +92,7 @@ void monsterAction(Character *m, Character *c) {
 		default:
 			meleeAttack(m, c);
 			break;
-	} //end switch(m->isMonster)
+	} /* end switch(m->isMonster) */
 }
 
 /** Ask user to equip item, potion, or spell found.
