@@ -8,32 +8,74 @@
 /** Special heavy attack used by golem which stuns player a turn */
 void golem_slam(Character *m, Character *c) {
 	assert(m->isMonster == GOLEM && !c->isMonster);
-	//printf("%s ");
+	printf("%s attacks %s with a devestating, overhead slam!\n", m->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	if(brand_check(m, c)) return;
+	char effectiveDamage = m->attack+2 - c->defense;
+	damage_check(c, effectiveDamage);
+	c->effect = STUN;
+	c->effectDuration = EFFECT_DURATIONS[STUN];
+	//TODO is the stun output here from effect ok?
 }
 
 /** VAMPIRE_LORD attack variant (unparriable) */
-/* Deals */
+/* Deals m->attack+1 damage */
 void vampire_thrust(Character *m, Character *c) {
 	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
-	//TODO printf("%s executes a lightning-quick thrust");
+	printf("%s executes a lightning-quick thrust, blowing past %s's defenses!\n", m->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	if(brand_check(m, c)) return;
+	char effectiveDamage = m->attack+1 - c->defense;
+	damage_check(c, effectiveDamage);
 }
 
 /** VAMPIRE_LORD attack variant */
+/* Deals m->attack+2 damage */
 void vampire_slash(Character *m, Character *c) {
 	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
-
+	printf("%s performs a broad, slashing attack on %s!\n", m->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	if(brand_check(m, c)) return;
+	if(parry_check(m, c)) return;
+	char effectiveDamage = m->attack+2 - c->defense;
+	damage_check(c, effectiveDamage);
 }
 
-/** VAMPIRE_LORD move that causes him to parry a meleeAttack if done on the next turn */
-void vampire_parry(Character *m, Character *c) {
+/** VAMPIRE_LORD attack variant (first attack unparriable) */
+/* Deals 2 damage (ignores defense) on first hit, then m->attack damage on a second hit (doesn't ignore defense) */
+void vampire_combo(Character *m, Character *c) {
 	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
+	printf("%s jabs %s!\n", m->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	if(brand_check(m, c)) return;
+	damage_check(c, 2);
 
+	printf("But %s is not done yet! %s backsteps, then slides forward for another strike at %s!\n", m->name, m->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	if(parry_check(m, c)) return;
+	char effectiveDamage = m->attack - c->defense;
+	damage_check(c, effectiveDamage);
 }
 
-/** Special vampire spell which drains player of life energy, giving vampire back health */
+/** Special vampire attack which drains player of life energy, giving vampire back health */
 void blood_reap(Character *m, Character *c) {
 	assert(m->isMonster == VAMPIRE_LORD && !c->isMonster);
-	
+	printf("%s teleports behind %s bites into %s's neck!\n", m->name, c->name, c->name);
+	sleep_ms(SLEEP_DURATION);
+	if(brand_check(m, c)) return;
+	char effectiveDamage = m->attack - c->defense;
+	damage_check(c, effectiveDamage);
+	if(effectiveDamage > 0) {
+		sleep_ms(SLEEP_DURATION);
+		if(m->totalHealth < m->health + effectiveDamage) {
+			printf("%s heals for %d health!\n", m->name, effectiveDamage);
+			m->health += effectiveDamage;
+		}
+		else {
+			printf("%s heals to full health!\n", m->name);
+			m->health = m->totalHealth;
+		}
+	}
 }
 
 /** When not the players turn, the monster performs an action.
@@ -78,7 +120,6 @@ void monsterAction(Character *m, Character *c) {
 			} /* end switch(r % 4) */
 			break;
 		case GOLEM:
-			//TODO: will have normal attack and heavy attack that stuns
 			if(r % 5 == 0) {
 				golem_slam(m, c);
 			} else {
@@ -180,6 +221,7 @@ void status_effect_check(Character *c) {
 		c->effect = NONE;
 	else
 		c->effectDuration -= 1;
+
 	switch(c->effect) {
 		case NONE:
 			return;
@@ -216,7 +258,9 @@ void status_effect_check(Character *c) {
 		case BRAND_ACTIVE:
 			//@TODO
 			break;
-	}
+		default:
+			break;
+	} /* end switch(c->effect) */
 }
 
 /** Function called once each level when combat is in progress.

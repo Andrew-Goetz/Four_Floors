@@ -25,7 +25,7 @@ void lightning_stake(Character *caster, Character *c) {
 	printf("%s casts lightning stake!\n", caster->name);
 	caster->mana -= SPELL_COSTS[LIGHTNING_STAKE];
 	c->effect = STUN;
-	c->effectDuration = 1;
+	c->effectDuration = EFFECT_DURATIONS[STUN];
 }
 
 /* One in a hundred chance of sheep exploading, dealing SHEEP_DAMAGE damage. */

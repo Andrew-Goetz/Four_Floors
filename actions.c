@@ -9,20 +9,32 @@
 bool brand_check(Character *attacker, Character *c) {
 	if(c->effect == BRAND_ACTIVE) {
 		attacker->health = 1;
-		printf("%s is drained of its energy by the brand, leaving %s with %d health!", attacker->name, attacker->name, attacker->health);
+		printf("%s is drained of its energy by the brand, leaving %s with %d health!\n", attacker->name, attacker->name, attacker->health);
 		return true;
 	}
 	return false;
 }
 
 /** Check if PARRY_READY is active on an attack */
-/* Parry damage shall be == (attacker->attack/2)-defender->defense */
+/* Parry damage shall be == (c->attack/2)-attacker->attacker */
 bool parry_check(Character *attacker, Character *c) {
 	if(c->effect == PARRY_READY) {
-
+		const int PARRY_DMG = (c->attack/2) - attacker->defense;
+		attacker->health -= PARRY_DMG;
+		printf("%s parries the attack, negating its damage and dealing %d damage to %s!\n", c->name, PARRY_DMG, attacker->name);
 		return true;
 	}
 	return false;
+}
+
+/** Gives a 'took damage' output message */
+void damage_check(Character *c, char effectiveDamage) {
+	if(effectiveDamage > 0) {
+		c->health -= effectiveDamage;
+		printf("%s took %d damage!\n", c->name, effectiveDamage);
+		return;
+	}
+	printf("%s took no damage!\n", c->name);
 }
 
 /** Takes two character, and character attacker and character c.
@@ -38,12 +50,16 @@ void meleeAttack(Character *attacker, Character *c) {
 	if(brand_check(attacker, c)) return;
 	if(parry_check(attacker, c)) return;
 	char effectiveDamage = attacker->attack - c->defense;
-	if(effectiveDamage > 0) {
-		c->health -= effectiveDamage;
-		printf("%s took %d damage!\n", c->name, effectiveDamage);
-	} else {
-		printf("%s took no damage!\n", c->name);
-	}
+	damage_check(c, effectiveDamage);
+}
+
+/** Applies parry status to character, only for next turn */
+/*  Only usable by the duelist player class (or a monster) */
+void parry(Character *c) {
+	printf("%s gets in stance, ready to parry the next melee attack.\n", c->name);
+	c->effect = PARRY_READY;
+	c->effectDuration = EFFECT_DURATIONS[PARRY_READY];
+	//TODO make sure this duration works properly
 }
 
 /* Output status, use enemyStatus for non-player characters */

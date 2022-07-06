@@ -39,7 +39,9 @@ void lvlUp(Character *c);
 /* actions.c */
 bool brand_check(Character *attacker, Character *c);
 bool parry_check(Character *attacker, Character *c);
+void damage_check(Character *c, char effectiveDamage);
 void meleeAttack(Character *attacker, Character *c);
+void parry(Character *c);
 void status(Character *c);
 void enemyStatus(Character *c, Character *m);
 void help(void);
@@ -74,7 +76,6 @@ void castSpell(Character *c, Character *m);
 void golem_slam(Character *m, Character *c);
 void vampire_thrust(Character *m, Character *c);
 void vampire_slash(Character *m, Character *c);
-void vampire_parry(Character *m, Character *c);
 void bloop_reap(Character *m, Character *c);
 void monsterAction(Character *m, Character *c);
 void item_or_spell_found(Character *c, Item itemFound, char message[]);
