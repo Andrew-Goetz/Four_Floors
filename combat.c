@@ -166,6 +166,12 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	switch(itemFound) {
 		/* for spells, add to knowSpell */
 		case FIREBALL: case LIGHTNING_STAKE: case SUMMON_SHEEP: case SACRIFICIAL_BRAND: case FROST_RESONANCE:
+			/* Don't prompt to learn spell if c already knows spell */
+			if(c->knowSpell[itemFound] == true) {
+				printf("%s already knows how to cast %s!\n", c->name, ITEM_AND_SPELL_NAMES[itemFound]);
+				sleep_ms(SLEEP_DURATION);
+				return;
+			}
 			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
 			isYes = yes_or_no("\n");
 			if(isYes) {

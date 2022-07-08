@@ -5,38 +5,28 @@
 #include "defs.h"
 
 void red_potion(Character *c, bool isGreater) {
-	char healVal;
-	if(isGreater) {
-		healVal = 5;
-	} else {
-		healVal = 3;
-	}
+	const char HEAL_VAL = (isGreater) ? 5 : 3;
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
 	sleep_ms(SLEEP_DURATION);
-	if(c->health + healVal >= c->totalHealth) {
+	if(c->health + HEAL_VAL >= c->totalHealth) {
 		c->health = c->totalHealth;
 		printf("%s is now full health.\n", c->name);
 	} else {
-		c->health += healVal;
-		printf("%s has healed %d health.\n", c->name, healVal);
+		c->health += HEAL_VAL;
+		printf("%s has healed %d health.\n", c->name, HEAL_VAL);
 	}
 }
 
 void blue_potion(Character *c, bool isGreater) {
-	char manaVal;
-	if(isGreater) {
-		manaVal = 5;
-	} else {
-		manaVal = 3;
-	}
+	const char MANA_VAL = (isGreater) ? 5 : 3;
 	printf("%s drinks the %s.\n", c->name, ITEM_AND_SPELL_NAMES[c->potionSlot]);
 	sleep_ms(SLEEP_DURATION);
-	if(c->mana + manaVal >= c->totalMana) {
+	if(c->mana + MANA_VAL >= c->totalMana) {
 		c->mana = c->totalMana;
 		printf("%s is now full mana.\n", c->name);
 	} else {
-		c->mana += manaVal;
-		printf("%s has restored %d mana.\n", c->name, manaVal);
+		c->mana += MANA_VAL;
+		printf("%s has restored %d mana.\n", c->name, MANA_VAL);
 	}
 }
 
@@ -45,7 +35,7 @@ void panacea(Character *c) {
 	sleep_ms(SLEEP_DURATION);
 	c->health = c->totalHealth;
 	c->mana = c->totalMana;
-	printf("All health and mana are restored.\n");
+	printf("Health and mana restored to full.\n");
 }
 
 /** Use potion in potionSlot */

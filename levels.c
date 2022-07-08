@@ -144,8 +144,11 @@ void lvl3(Character *c) {
 void lvl4(Character *c) {
 	eprintf(C_GREEN "\n---------- Level 4 ----------" C_RESET);
 	eprintf("%s mutters a name in his dying breath: \"Elizabeth...\"", MONSTER_NAMES[MAD_WIZARD]);
-	eprintf("Behind him, %s sees a number of books, personal notes written by the deceased man.", c->name);
-	bool isYes = yes_or_no("Read the open page?\n");
+	eprintf("A desk filled with crumbled scrolls lies behind the deceased man.");
+	item_or_spell_found(c, FROST_RESONANCE, "The first scroll is cold to the touch.\n");
+	//TODO
+	eprintf("Underneath the scrolls, %s sees an open book, personal notes from %s.", c->name, MONSTER_NAMES[MAD_WIZARD]);
+	bool isYes = yes_or_no("Skim through the pages.\n");
 	if(isYes) {
 
 	} else {
@@ -153,7 +156,7 @@ void lvl4(Character *c) {
 	}
 
 
-
+	//eprintf("
 	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue?\n");
 	if(isYes) {
 		item_or_spell_found(c, SACRIFICIAL_BRAND, "\n");
