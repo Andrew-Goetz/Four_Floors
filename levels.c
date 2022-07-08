@@ -9,10 +9,10 @@ void lvl0(Character *c) {
 	eprintf("Press enter to advance through dialogue.");
 	eprintf("Now %s begins an arduous journey to the fourth floor of the mansion.", c->name);
 	eprintf(C_GREEN "\n---------- Level 0 ----------" C_RESET);
-	eprintf("A forest of trees surrounds a clearing; it is here that a massive,"
-			" four-floor mansion towers above the forest.");
+	eprintf("%s has come a long way from the village to this ancient forest.", c->name);
+	eprintf("The thick treeline gives way to a clearing; it is here that a massive, four-floor mansion towers above the earth.");
 	eprintf("%s wonders: what might lie on the fourth floor?", c->name);
-	eprintf("%s reaches the massive front doors of the mansion.", c->name);
+	eprintf("%s continues, reaching the massive front doors of the mansion.", c->name);
 	bool isYes = yes_or_no("Enter the mansion, beginning a perilous journey?\n");
 	if(!isYes) {
 		eprintf("Intimidated by the mansion, %s turns around and heads home. Maybe it's for the best.\n", c->name);
@@ -146,23 +146,33 @@ void lvl4(Character *c) {
 	eprintf("%s mutters a name in his dying breath: \"Elizabeth...\"", MONSTER_NAMES[MAD_WIZARD]);
 	eprintf("A desk filled with crumbled scrolls lies behind the deceased man.");
 	item_or_spell_found(c, FROST_RESONANCE, "The first scroll is cold to the touch.\n");
-	//TODO
+	item_or_spell_found(c, FIREBALL, "The next scroll is scorching hot.\n");
+	item_or_spell_found(c, LIGHTNING_STAKE, "The final scroll makes one's hair stand on end.\n");
 	eprintf("Underneath the scrolls, %s sees an open book, personal notes from %s.", c->name, MONSTER_NAMES[MAD_WIZARD]);
-	bool isYes = yes_or_no("Skim through the pages.\n");
+	bool isYes = yes_or_no("Skim through the pages?\n");
 	if(isYes) {
-
+		//TODO
+		eprintf("It's illegible for now. %s continues down the corridor.", c->name);
 	} else {
 		eprintf("There is no time to lose: %s opts to continue down the corridor", c->name);
 	}
-
-
-	//eprintf("
-	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue?\n");
+	eprintf("The corridor continues straight down a metallic, featureless hallway.");
+	item_or_spell_found(c, IRON_PELLET, "Sitting on a glass pedestal is a gooey, metalic, and fragrent substance.");
+	eprintf("%s continues down the suprisingly inornate hall.", c->name);
+	eprintf("Suddenly the hallway ends. A massive statue of pure metal stands many meters tall.");
+	eprintf("A pool of water sits below. A sign reads:\n\t\"Offer up all belongings to tread upon the %spath of righteousness%s.\"", C_PURPLE, C_RESET);
+	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue? Don't make this choice lightly.\n");
 	if(isYes) {
-		item_or_spell_found(c, SACRIFICIAL_BRAND, "\n");
+		c->potionSlot = NOTHING;
+		c->itemSlot = NOTHING;
+		item_or_spell_found(c, SACRIFICIAL_BRAND, "The potions and items are drained away. The statue breaks in two, revealing a scroll!");
+		eprintf("Unfortunately, it looks like the statue breaking shattered a healing potion sitting behind the statue.\n");
+	} else {
+		eprintf("A prudent decision: who would give up such valuable resources at a time like this?");
+		item_or_spell_found(c, RED_POTION, "Behind the statue is a red potion!\n");
 	}
 	eprintf("Proceeding past the statue, %s finds heavy door shut closed by chains.", c->name);
-	eprintf("Press enter to break and the chains and open the door.");
+	eprintf("Press enter to break the chains and open the door.");
 	Character *m = newCharacter(" appears!", GOLEM);
 	combat_sequence(c, m, 3);
 }
@@ -178,7 +188,7 @@ void lvl5(Character *c) {
 	eprintf("At the end of the hall lies a foreboding pair of black doors. Press enter to open them.");
 	eprintf("The next room is extravagantly decorated; stained glass windows adorn the walls, and a cloaked figure sits upon a magnificent throne.");
 	eprintf("He rises slowly from his throne, his crimson-red eyes striking fear into %s's heart.", c->name);
-	eprintf("His sharp teeth make it clear he is a vampire. %s thinks the red liquid in his cup may not be wine.", c->name);
+	eprintf("His sharp teeth and pointed ears make it clear he is a vampire. %s thinks the red liquid in his cup may not be wine.", c->name);
 	eprintf("The vampire clears his throat and speaks: \"You have done well to come this far, and for that you deserve my respect.\"");
 	eprintf("\"Therefore, I will give you one last chance, %s. Leave this place, or I will kill you. Your death is guaranteed if you stay.\"", c->name);
 	bool isYes = yes_or_no("Take the vampire up on his offer and leave the mansion?\n");
@@ -190,7 +200,7 @@ void lvl5(Character *c) {
 	}
 	eprintf("\"You fool! You dare think you can challenge me, Lord of all Vampires? You jest, %s.\"", c->name);
 	Character *m = newCharacter(" tears off his cloak, unsheaths a bejeweled rapier, and growls fiercely.", VAMPIRE_LORD);
-	eprintf("\"Your move, %s.\"", c->name);
+	printf("\"Your move, %s.\"\n", c->name);
 	combat_sequence(c, m, 0); // last fight so no level ups needed
 }
 
@@ -198,17 +208,21 @@ void the_end(Character *c) {
 	eprintf(C_GREEN "\n---------- Conclusion ----------" C_RESET);
 	eprintf("The vampire burns into dust, his cloak and sword droping to the ground.");
 	eprintf("Beyond the Vampire Lord's lavish throne lies a simple wooden door. Press enter to open it.");
-	eprintf("Expecting the riches beyond imagination, %s is shocked: a child lies asleep on the bed.", c->name);
-	eprintf("The boy is adorable, but crooked eyes and pointed ears make obvious the child's lineage.");
-	eprintf("The Vampire Lord killed thousands of men in his long lifetime, and this child might very well do the same.");
+	eprintf("Expecting the riches beyond imagination, %s is shocked: a sleep child awakes from bed and walks towards %s.", c->name, c->name);
+	eprintf("The little boy is adorable, but crooked eyes and pointed ears make obvious the child's lineage.");
+	eprintf("The Vampire Lord killed thousands of men in his long lifetime, and his son might very well do the same.");
 	eprintf("Human or vampire, a child left alone will surely die of hunger and solitude.");
 	bool isYes = yes_or_no("A decision must be made: " C_RED "kill the child" C_RESET " (Yes) or " C_GREEN "raise the child as your own" C_RESET " (No)?\n");
 	if(isYes) {
-		eprintf("");
-		eprintf("");
+		eprintf("The child's death is swift. The child's limp body droops to the ground.");
+		eprintf("%s places the head on the child's bed and leaves the mansion, sword stained with fresh blood.", c->name);
+		eprintf("%s returns to the village victorious to a life of fame and comfort.", c->name);
+		eprintf("All would come to know %s as the slayer of the Great Vampire Lord and his kin, a true hero.", c->name);
 	} else {
-		eprintf("");
-		eprintf("");
+		eprintf("%s puts down any weapons and reaches a hand out to the child.", c->name);
+		eprintf("The child grabs %s's hand. His fangs are visible as he smiles gently at %s.", c->name, c->name);
+		eprintf("%s will not be able to return to the village with a demon child in tow.", c->name);
+		eprintf("A rough life awaits the vampire child and %s, the old adventurer he now considers family.", c->name);
 	}
-	eprintf("Press enter to exit the game.");
+	eprintf("Press enter to exit the game and accept your decision.");
 }

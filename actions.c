@@ -18,9 +18,11 @@ bool brand_check(Character *attacker, Character *c) {
 /** Check if PARRY_READY is active on an attack */
 bool parry_check(Character *attacker, Character *c) {
 	if(c->effect == PARRY_READY) {
-		const int PARRY_DMG = ((c->attack*3)/4) - attacker->defense;
-		attacker->health -= PARRY_DMG;
-		printf("%s parries the attack, negating its damage and dealing %d damage to %s!\n", c->name, PARRY_DMG, attacker->name);
+		int parry_dmg = ((c->attack*3)/4) - attacker->defense;
+		if(parry_dmg < 0)
+			parry_dmg = 0;
+		attacker->health -= parry_dmg;
+		printf("%s parries the attack, negating its damage and dealing %d damage to %s!\n", c->name, parry_dmg, attacker->name);
 		return true;
 	}
 	return false;
