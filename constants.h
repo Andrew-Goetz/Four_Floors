@@ -6,7 +6,7 @@
 #define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank (hence the +1) */
 #define STATUS_EFFECT_NUM 9 /* Number of status effects in the game, including NONE status effect */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
-#define SLEEP_DURATION 750 /* Amount of time that passes, in ms, whenever sleep_ms is called */
+#define SLEEP_DURATION 700 /* Amount of time that passes, in ms, whenever sleep_ms is called */
 
 /* Some color stuff from https://stackoverflow.com/a/3219471 */
 /* Use like: printf(C_RED "This is red text.\n" C_RESET); */
@@ -32,11 +32,11 @@ static const char *MONSTER_NAMES[MONSTERS_IN_GAME] = {
 static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Player Character */	{5, 3, 2, 1},
 	/* Beast */ 			{5, 0, 2, 0},
-	/* Killer Plant */ 		{9, 0, 2, 1}, /* Almost 1 shot by fireball */
+	/* Killer Plant */ 		{9, 0, 3, 1}, /* Almost 1 shot by fireball */
 	/* Wraith */ 			{8, 2, 3, 1}, /* Increased damage from light vial */
-	/* Mad Wizard */ 		{10, 7, 1, 0}, /* Immune to magic, casts a lot of spells */
+	/* Mad Wizard */ 		{11, 7, 3, 1}, /* Immune to magic, casts a lot of spells */
 	/* Golem */			 	{12, 0, 4, 3}, /* All physical damage so iron pellet good against him */
-	/* Vampire Lord */		{11, 3, 4, 2}
+	/* Vampire Lord */		{11, 3, 4, 2} /* A number of special unique moves */
 };
 
 /* To make accessing above array less annoying */
@@ -67,7 +67,7 @@ typedef enum STATUS_EFFECTS {
 	DRAIN,
 	/* Positive Effects */
 	DEFENSE_UP,
-	ATTACK_AND_HEALTH_UP,
+	HEALTH_AND_MANA_UP,
 	TEARS_ACTIVE,
 	BRAND_ACTIVE,
 	/* Active Effects */
@@ -77,10 +77,10 @@ typedef enum STATUS_EFFECTS {
 /* How long each status effect is active, calculated in combat_sequence().
  * Position in array corresponds to STATUS_EFFECTS enum.
  * Some effects (STUN, for instance) will be changed to a different duration on occasion, these are just defaults.
- * TODO should DEFENSE_UP and ATTACK_AND_HEALTH_UP just last whole fight?
+ * DEFENSE_UP and HEALTH_AND_MANA_UP last a complete fight, stored in c->buff.
  */ 
 static const int EFFECT_DURATIONS[STATUS_EFFECT_NUM] = {
-	0, 1, 2, 2, 3, 3, 1, 1, 1
+	0, 1, 2, 2, -1, -1, 1, 1, 1
 };
 
 typedef enum ITEMS_AND_SPELLS {

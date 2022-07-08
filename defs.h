@@ -19,6 +19,7 @@ typedef struct Character {
 	char isMonster;
 	bool isTurn;
 
+	bool isKnight;
 	unsigned char totalHealth;
 	unsigned char totalMana;
 	char health;
@@ -30,7 +31,8 @@ typedef struct Character {
 	Item potionSlot;
 	bool knowSpell[SPELLS_IN_GAME];
 
-	Effect effect;
+	Effect effect; /* For stuff like poison or parry */
+	Effect buff; /* For buffs (DEFENSE_UP or ATTACK_AND_HEALTH_UP */
 	unsigned char effectDuration;
 } Character;
 Character* newCharacter(char message[], Enemy enemy);
@@ -44,7 +46,7 @@ void meleeAttack(Character *attacker, Character *c);
 void parry(Character *c);
 void status(Character *c);
 void enemyStatus(Character *c, Character *m);
-void help(void);
+void help(Character *c);
 void wait(Character *c);
 void escape(Character *c, Character *m);
 void actions(Character *c, Character *m);
@@ -61,8 +63,9 @@ void tears(Character *c);
 void iron_pellet(Character *c);
 void demon_fire(Character *user, Character *c);
 void light_vial(Character *user, Character *c);
-void horn(Character *user, Character *c);
+void horn(Character *c);
 void useItem(Character *c, Character *m);
+void buff_revert(Character *c);
 
 /* spells.c */
 void fireball(Character *caster, Character *c);
@@ -80,6 +83,8 @@ void bloop_reap(Character *m, Character *c);
 void monsterAction(Character *m, Character *c);
 void item_or_spell_found(Character *c, Item itemFound, char message[]);
 void status_effect_check(Character *c);
+bool check_monster_health(Character *c, Character *m, unsigned char levelUpNumber);
+void check_player_health(Character *c, Character *m);
 void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber);
 
 /* levels.c */

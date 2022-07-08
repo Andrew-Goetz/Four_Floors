@@ -7,6 +7,7 @@
 /* Floor 1 start */
 void lvl0(Character *c) {
 	eprintf("Press enter to advance through dialogue.");
+	eprintf("Now %s begins an arduous journey to the fourth floor of the mansion.", c->name);
 	eprintf(C_GREEN "\n---------- Level 0 ----------" C_RESET);
 	eprintf("A forest of trees surrounds a clearing; it is here that a massive,"
 			" four-floor mansion towers above the forest.");
@@ -17,7 +18,7 @@ void lvl0(Character *c) {
 		eprintf("Intimidated by the mansion, %s turns around and heads home. Maybe it's for the best.\n", c->name);
 		free(c); exit(0);
 	}
-	eprintf("The doors creak open." C_BLUE " %s " C_RESET "enters the mansion.", c->name);
+	eprintf("The doors creak open. %s enters the mansion.", c->name);
 	eprintf("Light streams into the mansion, revealing the dust floating in the air.");
 	eprintf("SLAM! The door closes behind %s!", c->name);
 	eprintf("%s turns and hears unnatural growls.", c->name);
@@ -47,7 +48,7 @@ void lvl1(Character *c) {
 	}
 	eprintf("In the next room, %s sees a staircase. This must lead to the second floor!", c->name);
 	eprintf("The distant voice of an elderly man echoes mysteriously in the distance: "
-			"\"Begone from this place, stranger!\"");
+			C_CYAN "\"Begone from this place, stranger!\"" C_RESET);
 	eprintf("Suddenly, a magical glow fills the air, and a massive plant grows rapidly out of the ground.");
 	eprintf("It resembles a Venus flytrap, only 100 times the size!");
 	Character *m = newCharacter(" appears!", KILLER_PLANT);
@@ -101,7 +102,7 @@ void lvl3(Character *c) {
 	eprintf(C_CYAN "\n---------- Level 3 ----------" C_RESET);
 	eprintf("The wraith lets out a high pitched shriek as it bursts into blue flames.");
 	eprintf("The black robe drifts elegantly to the floor, while the weighty scythe slams into the wall behind.");
-	bool isYes = yes_or_no("Investigate the broken wall?");
+	bool isYes = yes_or_no("Investigate the broken wall?\n");
 	if(isYes) {
 		eprintf("Behind the wall is a small room; it's dusty, but a lit candle hints at the room's recent occupancy.");
 		eprintf("Endless pieces of paper cover a small desk. Press enter to see what lies beneath.");
@@ -112,24 +113,31 @@ void lvl3(Character *c) {
 		eprintf("It leads to a narrow staircase leading upwards, to the 3rd floor of the mansion.");
 	}
 	eprintf("%s follows a narrow, poorly lit hallway, reaching a crossroad. The new path to the left is faintly lighter.", c->name);
-	isYes = yes_or_no("Proceed left down this new path?");
+	isYes = yes_or_no("Proceed left down this new path?\n");
 	if(isYes) {
 		eprintf("%s arrives at a door. Its doorknob won't turn. A decrepit sign reads \"The portal room.\"", c->name);
 		eprintf("Press enter to force the door open.");
-		eprintf("The other side of the ");
-		item_or_spell_found(c, DEMON_FIRE, "");
+		eprintf("The door leads into a black chared room, with a frightening contraption in the middle.");
+		eprintf("The only word %s can make out from notes sitting on a burnt desk is \"Demon\"", c->name);
+		item_or_spell_found(c, DEMON_FIRE, "On the desk with the notes is a vial!\n");
+		eprintf("A beautiful door at the far end of the room seems uneffected by the darkness of the room. Press enter to open it.");
 	} else {
-		//TODO
-		item_or_spell_found(c, HORN_OF_SAUL, "");
+		eprintf("%s continues down the current path.", c->name);
+		eprintf("The fading carpet floor gives way to unblemished marble.\n");
+		eprintf("A set of magnificent doors carved from white wood are too heavy for %s to open.", c->name);
+		eprintf("At the end of the hall, lying in a chair attached to some wires, is a skeleton double %s's size.", c->name);
+		eprintf("He must have been a formidable man. %s wonders what had been done to him.", c->name);
+		item_or_spell_found(c, HORN_OF_SAUL, "Hung around the skeleton's torso is a magnificent, yet fragile, horn.\n");
+		eprintf("A door as fair and white as the horn lies lies ahead. Press enter to open it.");
 	}
-	eprintf("The door opens to a magnificently bright room with massive windows adorned with elegant white curtains.");
+	eprintf("The door opens to a magnificently bright room, fitted with massive windows adorned with elegant white curtains.");
 	eprintf("%s can see the tops of the trees of the forest below. %s has come a long way on the journey so far, an admirable feat.", c->name, c->name);
 	drink_potion(c);
 	eprintf("%s's rest here has come to an end. Press enter to open a harsh, black door at the far end of the room.", c->name);
 	eprintf("The door slams closed behind %s. Torches illuminate a figure sitting on a large chair at the far end of the room.", c->name);
-	eprintf("\"You will pay for what you've done!\" This voice... it's the same voice as on the second floor!");
+	eprintf("\"You! You will pay for what you've done!\" This voice... it's the same voice as on the second floor!");
 	eprintf("The old man who steps forward wears a wizard's hat. His mad, red eyes gaze violently at %s.", c->name);
-	Character *m = newCharacter(" slams his staff against the ground!", MAD_WIZARD);
+	Character *m = newCharacter(" slams his staff against the ground and stands to fight!", MAD_WIZARD);
 	combat_sequence(c, m, 2);
 }
 
@@ -137,7 +145,7 @@ void lvl4(Character *c) {
 	eprintf(C_GREEN "\n---------- Level 4 ----------" C_RESET);
 	eprintf("%s mutters a name in his dying breath: \"Elizabeth...\"", MONSTER_NAMES[MAD_WIZARD]);
 	eprintf("Behind him, %s sees a number of books, personal notes written by the deceased man.", c->name);
-	bool isYes = yes_or_no("Read the open page?");
+	bool isYes = yes_or_no("Read the open page?\n");
 	if(isYes) {
 
 	} else {
@@ -146,7 +154,7 @@ void lvl4(Character *c) {
 
 
 
-	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue?");
+	isYes = yes_or_no("Offer up all items and potions in inventory as tribute to the statue?\n");
 	if(isYes) {
 		item_or_spell_found(c, SACRIFICIAL_BRAND, "\n");
 	}
@@ -170,7 +178,7 @@ void lvl5(Character *c) {
 	eprintf("His sharp teeth make it clear he is a vampire. %s thinks the red liquid in his cup may not be wine.", c->name);
 	eprintf("The vampire clears his throat and speaks: \"You have done well to come this far, and for that you deserve my respect.\"");
 	eprintf("\"Therefore, I will give you one last chance, %s. Leave this place, or I will kill you. Your death is guaranteed if you stay.\"", c->name);
-	bool isYes = yes_or_no("Take the vampire up on his offer and leave the mansion?");
+	bool isYes = yes_or_no("Take the vampire up on his offer and leave the mansion?\n");
 	if(isYes) {
 		eprintf("\"Hahaha, I always expected you would be a coward. Now, leave me be and vanish, before I change my mind.\"");
 		eprintf("With that, %s leaves the vampire's throne room in shame, never knowing what the vampire guarded so vigorously. Perhaps it's for the best.\n", c->name);
@@ -196,7 +204,8 @@ void the_end(Character *c) {
 		eprintf("");
 		eprintf("");
 	} else {
-
+		eprintf("");
+		eprintf("");
 	}
 	eprintf("Press enter to exit the game.");
 }

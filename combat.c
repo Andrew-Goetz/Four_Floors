@@ -127,8 +127,24 @@ void monsterAction(Character *m, Character *c) {
 			}
 			break;
 		case VAMPIRE_LORD:
-			//TODO: several attack types and spell types
-			meleeAttack(m, c);
+			switch(r % 14) {
+				case 0: case 1: case 2:
+					vampire_thrust(m, c);
+					break;
+				case 3: case 4: case 5:
+					vampire_combo(m, c);
+					break;
+				case 6: case 7:
+					parry(m);
+				case 12: case 13:
+					if(m->totalHealth - m->health >= m->attack) {
+						blood_reap(m, c);
+						break;
+					} /* Fall through to default if a heal isn't needed */
+				default:
+					vampire_slash(m, c);
+					break;
+			} /* end switch(r % 12) */
 			break;
 		default:
 			meleeAttack(m, c);
@@ -148,7 +164,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 	eprintf("%s", ITEM_AND_SPELL_DESCRIPTIONS[itemFound]);
 	bool isYes;
 	switch(itemFound) {
-		/* for spells, add to knowSpell, making sure index 0 (NOTHING) is still false */
+		/* for spells, add to knowSpell */
 		case FIREBALL: case LIGHTNING_STAKE: case SUMMON_SHEEP: case SACRIFICIAL_BRAND: case FROST_RESONANCE:
 			printf("Learn %s?", ITEM_AND_SPELL_NAMES[itemFound]);
 			isYes = yes_or_no("\n");
@@ -175,7 +191,6 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 					usePotion(c, false);
 				}
 				c->potionSlot = itemFound;
-				sleep_ms(SLEEP_DURATION);
 				printf("%s is now in potion inventory.\n", ITEM_AND_SPELL_NAMES[c->potionSlot]);
 			} else {
 				if(c->potionSlot) {
@@ -184,6 +199,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 					printf("Ok then.\n");
 				}
 			}
+			sleep_ms(SLEEP_DURATION);
 			break;
 		/* for items, offer to discard current item in inventory if one exists and pick up found one */
 		case TEARS: case IRON_PELLET: case DEMON_FIRE: case LIGHT_VIAL: case HORN_OF_SAUL:
@@ -191,7 +207,7 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 			if(!c->itemSlot) {
 				isYes = yes_or_no("\n");
 			} else {
-				printf("%s", ITEM_AND_SPELL_NAMES[c->itemSlot]);
+				printf(" %s", ITEM_AND_SPELL_NAMES[c->itemSlot]);
 				isYes = yes_or_no(" will be discarded.\n");
 			}
 			if(isYes) {
@@ -215,8 +231,9 @@ void item_or_spell_found(Character *c, Item itemFound, char message[]) {
 
 /* Handles status effects */
 /* For now, applying a new status effect overwrite current status effect */
-//TODO maybe remove turn_number argument?? should be handled fine in combat_sequence
 void status_effect_check(Character *c) {
+	if(c->effect == HEALTH_AND_MANA_UP || c->effect == DEFENSE_UP)
+		return;
 	if(c->effectDuration == 0)
 		c->effect = NONE;
 	else
@@ -239,13 +256,7 @@ void status_effect_check(Character *c) {
 			}
 			break;
 		case DRAIN:
-			//@TODO
-			break;
-		case DEFENSE_UP:
-			//@TODO
-			break;
-		case ATTACK_AND_HEALTH_UP:
-			//@TODO
+			/* TODO: Not yet implemented */
 			break;
 		case TEARS_ACTIVE:
 			if(c->health <= 0) {
@@ -263,6 +274,31 @@ void status_effect_check(Character *c) {
 	} /* end switch(c->effect) */
 }
 
+/* Checks if monster has died during combat */
+bool check_monster_health(Character *c, Character *m, unsigned char levelUpNumber) {
+	if(m->health <= 0) {
+		sleep_ms(SLEEP_DURATION);
+		printf(C_PURPLE "VICTORY!\n" C_RESET);
+		sleep_ms(SLEEP_DURATION);
+		for(; levelUpNumber != 0; levelUpNumber--) {
+			lvlUp(c);
+		}
+		buff_revert(c);
+		c->isTurn = true;
+		free(m);
+		return true;
+	}
+	return false;
+}
+
+/* Checks if player has died during combat */
+void check_player_health(Character *c, Character *m) {
+	if(c->health <= 0) { /* status_effect_check can alter c->health */
+		printf("%s has been defeated!\n", c->name);
+		free(m); free(c); exit(0);
+	}
+}
+
 /** Function called once each level when combat is in progress.
  *  c is the player character, m is the monster, and levelUpNumber is the 
  *	number of times the lvlUp function will be called when m is defeated.
@@ -276,26 +312,17 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 	for(;;) {
 		/* Player turn */
 		status_effect_check(c);
-		if(c->health <= 0) { // status_effect_check can alter c->health
-			printf("%s has been defeated!\n", c->name);
-			free(m); free(c); exit(0);
-		}
+		check_player_health(c, m);
 		actions(c, m);
-		if(m->health <= 0) {
-			sleep_ms(SLEEP_DURATION);
-			printf("VICTORY!\n");
-			sleep_ms(SLEEP_DURATION);
-			for(; levelUpNumber != 0; levelUpNumber--) {
-				lvlUp(c);
-			}
-			c->isTurn = true;
+		if(check_monster_health(c, m, levelUpNumber))
 			break;
-		}
 		isTurnChanged = c->isTurn;
 		/* Monster turn */
 		if(!c->isTurn) {
 			status_effect_check(m);
 			monsterAction(m, c);
+			if(check_monster_health(c, m, levelUpNumber))
+				break;
 		}
 		/* want to make sure turn_number not incremented on help or other non-isTurn-changing instructions */
 		if(isTurnChanged != c->isTurn && c->health != 0) {
@@ -310,5 +337,4 @@ void combat_sequence(Character *c, Character *m, unsigned char levelUpNumber) {
 			//printf("\n%d\n\n", turn_number);
 		}
 	}
-	free(m);
 }

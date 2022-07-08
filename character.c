@@ -19,25 +19,8 @@
 /** Creates a new character, some characters different than others. */
 Character* newCharacter(char message[], Enemy enemy) {
 	Character *c = malloc(sizeof(*c));
-
-	c->health = MONSTER_STATS[enemy][HEALTH];
-	c->totalHealth = MONSTER_STATS[enemy][HEALTH];
-	c->mana = MONSTER_STATS[enemy][MANA];
-	c->totalMana = MONSTER_STATS[enemy][MANA];
-	c->attack = MONSTER_STATS[enemy][ATTACK];
-	c->defense = MONSTER_STATS[enemy][DEFENSE];
-
-	c->itemSlot = NOTHING;
-	c->potionSlot = NOTHING;
-	for(unsigned char i = 0; i < SPELLS_IN_GAME; i++) 
-		c->knowSpell[i] = false;
-
-	c->effect = NONE;
-	c->effectDuration = 0;
-
 	c->isMonster = enemy;
-	/* Gets player character's name */
-	if(enemy == PLAYER) {
+	if(c->isMonster == PLAYER) {
 		char buf[MAX_INPUT_LENGTH + sizeof(C_BLUE) + sizeof(C_RESET)];
 		getInput(buf, "Enter your name: ");
 		/* This sprintf is safe, I promise */
@@ -52,10 +35,55 @@ Character* newCharacter(char message[], Enemy enemy) {
 			isYes = yes_or_no("Is this correct?\n");
 		}
 		c->isTurn = true; /* make sure player character gets first turn */
+		memset(buf, 0, MAX_INPUT_LENGTH + sizeof(C_BLUE) + sizeof(C_RESET));
+		for(;;) {
+			printf("Is %s a %sKnight%s (higher stats) or a %sDuelist%s (access to parry skill)?\n", c->name, C_CYAN, C_RESET, C_GREEN, C_RESET);
+			getInput(buf, "Enter Knight(k) or Duelist(d): ");
+			if(case_compare(buf, "knight") == 0 || case_compare(buf, "k") == 0) {
+				printf("%s is now a %sKnight%s.\n", c->name, C_CYAN, C_RESET);
+				c->isKnight = true;
+				break;
+			} else if(case_compare(buf, "duelist") == 0 || case_compare(buf, "d") == 0) {
+				printf("%s is now a %sDuelist%s.\n", c->name, C_GREEN, C_RESET);
+				c->isKnight = false;
+				break;
+			} else {
+				printf("Invalid input.\n"); /* repeats loop and asks again */
+			}
+		}
 	} else {
 		/* This strcpy is safe since we're copying from a buffer of known size */
 		strcpy(c->name, MONSTER_NAMES[enemy]);
 		printf("%s%s\n", c->name, message);
+	}
+	c->health = MONSTER_STATS[enemy][HEALTH];
+	c->totalHealth = MONSTER_STATS[enemy][HEALTH];
+	c->mana = MONSTER_STATS[enemy][MANA];
+	c->totalMana = MONSTER_STATS[enemy][MANA];
+	c->attack = MONSTER_STATS[enemy][ATTACK];
+	c->defense = MONSTER_STATS[enemy][DEFENSE];
+
+	c->itemSlot = NOTHING;
+	c->potionSlot = NOTHING;
+	for(unsigned char i = 0; i < SPELLS_IN_GAME; i++) 
+		c->knowSpell[i] = false;
+
+	c->effect = NONE;
+	c->buff = NONE;
+	c->effectDuration = 0;
+	if(!c->isMonster && !c->isKnight) {
+		c->totalHealth--;
+		c->health--;
+		c->totalMana--;
+		c->mana--;
+	} else if(c->isMonster == MAD_WIZARD) {
+		c->knowSpell[FIREBALL] = true;
+		c->knowSpell[LIGHTNING_STAKE] = true;
+		c->knowSpell[FROST_RESONANCE] = true;
+		c->isKnight = true;
+	}
+	else {
+		c->isKnight = true;
 	}
 	return c;
 }

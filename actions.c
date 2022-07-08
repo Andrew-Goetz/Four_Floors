@@ -16,10 +16,9 @@ bool brand_check(Character *attacker, Character *c) {
 }
 
 /** Check if PARRY_READY is active on an attack */
-/* Parry damage shall be == (c->attack/2)-attacker->attacker */
 bool parry_check(Character *attacker, Character *c) {
 	if(c->effect == PARRY_READY) {
-		const int PARRY_DMG = (c->attack/2) - attacker->defense;
+		const int PARRY_DMG = ((c->attack*3)/4) - attacker->defense;
 		attacker->health -= PARRY_DMG;
 		printf("%s parries the attack, negating its damage and dealing %d damage to %s!\n", c->name, PARRY_DMG, attacker->name);
 		return true;
@@ -59,7 +58,8 @@ void parry(Character *c) {
 	printf("%s gets in stance, ready to parry the next melee attack.\n", c->name);
 	c->effect = PARRY_READY;
 	c->effectDuration = EFFECT_DURATIONS[PARRY_READY];
-	//TODO make sure this duration works properly
+	if(!c->isMonster)
+		c->isTurn = false;
 }
 
 /* Output status, use enemyStatus for non-player characters */
@@ -79,7 +79,6 @@ void status(Character *c) {
 			break;
 		}
 	}
-	//@TODO check that this works properly, it almost certainly does
 	if(c->knowSpell[1]) { // FIREBALL
 		printf("\tFireball(f)\n");
 	} if(c->knowSpell[2]) { // LIGHTNING_STAKE
@@ -97,8 +96,8 @@ void status(Character *c) {
  *  Passes in player character as well to ensure player doesn't lose a turn.
  */
 void enemyStatus(Character *c, Character *m) {
-	assert(m->isMonster);
-	static const char *MONSTER_HINTS[MONSTERS_IN_GAME] = {
+	assert(!c->isMonster && m->isMonster);
+	const char *MONSTER_HINTS[MONSTERS_IN_GAME] = {
 		"ERROR\n", /* Character gets no hint */
 		"has a large scar across its hairy chest. It must be weak to physical attacks!\n", /* The Beast */
 		"seems vulnerable to fire.\n", /* The Killer Plant */
@@ -113,7 +112,7 @@ void enemyStatus(Character *c, Character *m) {
 }
 
 /** Output help info */
-void help(void) {
+void help(Character *c) {
 	printf("Goal: defeat your foes and stay alive, reach the fourth floor:\n"
 			"\thelp(h)\t\tlists possible commands\n"
 			"\tstatus(s)\tlists out player stats\n"
@@ -124,6 +123,8 @@ void help(void) {
 			"\tcast(c)\t\tcast spell, ending turn\n"
 			"\twait(w)\t\tdo nothing, ending turn\n"
 			"\tescape(exit)\tabandon quest and flee\n");
+	if(!c->isKnight)
+		printf("\tparry(par)\tblock next enemy melee attack, ending turn\n");
 	sleep_ms(SLEEP_DURATION);
 	bool isYes = yes_or_no("Output additional game information?\n");
 	if(isYes) {
@@ -170,7 +171,7 @@ void actions(Character *c, Character *m) {
 		getInput(input, ">> ");
 		/* help(h): lists out possible commands and then asks if user wants more in depth information */
 		if(case_compare(input, "help") == 0 || case_compare(input, "h") == 0) {
-			help();
+			help(c);
 			break;
 		}
 		/* status(s): outputs current player status */
@@ -214,7 +215,11 @@ void actions(Character *c, Character *m) {
 			escape(c, m);
 			break;
 		}
-		else {
+		/* parry(par): prepares player to parry next attack, only available to Duelist class */
+		else if((case_compare(input, "parry") == 0 || case_compare(input, "par")  == 0) && !c->isKnight) {
+			parry(c);
+			break;
+		} else {
 			printf("Invalid input, type help(h) for possible commands.\n");
 		}
 	} 
