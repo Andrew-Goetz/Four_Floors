@@ -215,7 +215,7 @@ void the_end(Character *c) {
 	bool isYes = yes_or_no("A decision must be made: " C_RED "kill the child" C_RESET " (Yes) or " C_GREEN "raise the child as your own" C_RESET " (No)?\n");
 	if(isYes) {
 		eprintf("The child's death is swift. The child's limp body droops to the ground.");
-		eprintf("%s places the head on the child's bed and leaves the mansion, sword stained with fresh blood.", c->name);
+		eprintf("%s places the child's detached head on his bed and leaves the mansion, sword stained by fresh blood.", c->name);
 		eprintf("%s returns to the village victorious to a life of fame and comfort.", c->name);
 		eprintf("All would come to know %s as the slayer of the Great Vampire Lord and his kin, a true hero.", c->name);
 	} else {

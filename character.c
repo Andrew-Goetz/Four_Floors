@@ -12,7 +12,7 @@
  * Negative mana not allowed, if not enough mana cannot cast a spell
  * no negative defense, total_damage = attacker's attack - defender's defense
  * if char isMonster == 0, its the player character
- * bool isTurn is only used in player struct, is essentially pointless in monster structs TODO is this still true?
+ * bool isTurn is only used in player struct, is essentially pointless in monster structs
  * elements of knowSpell are true if character knows that spell, corresponds to order of spells in enum
  */
 

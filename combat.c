@@ -15,7 +15,6 @@ void golem_slam(Character *m, Character *c) {
 	damage_check(c, effectiveDamage);
 	c->effect = STUN;
 	c->effectDuration = EFFECT_DURATIONS[STUN];
-	//TODO is the stun output here from effect ok?
 }
 
 /** VAMPIRE_LORD attack variant (unparriable) */
