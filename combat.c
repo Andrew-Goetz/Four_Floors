@@ -91,7 +91,7 @@ void monsterAction(Character *m, Character *c) {
 	if(m->effect == STUN)
 		return;
 	int r = rand() % 100;
-	printf("\nDEBUG: r\%14=%d\n\n", r%14);
+	//printf("\nDEBUG: r\%14=%d\n\n", r%14);
 	switch(m->isMonster) {
 		case WRAITH:
 			/* TODO: maybe some attack that adds DRAIN affliction? */
