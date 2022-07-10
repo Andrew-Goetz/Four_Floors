@@ -123,10 +123,10 @@ void lvl3(Character *c) {
 		eprintf("A beautiful door at the far end of the room seems uneffected by the darkness of the room. Press enter to open it.");
 	} else {
 		eprintf("%s continues down the current path.", c->name);
-		eprintf("The fading carpet floor gives way to unblemished marble.\n");
+		eprintf("The fading carpet floor gives way to unblemished marble.");
 		eprintf("A set of magnificent doors carved from white wood are too heavy for %s to open.", c->name);
 		eprintf("At the end of the hall, lying in a chair attached to some wires, is a skeleton double %s's size.", c->name);
-		eprintf("He must have been a formidable man. %s wonders what had been done to him.", c->name);
+		eprintf("He must have been a formidable man in life. %s wonders what had been done to him.", c->name);
 		item_or_spell_found(c, HORN_OF_SAUL, "Hung around the skeleton's torso is a magnificent, yet fragile, horn.\n");
 		eprintf("A door as fair and white as the horn lies lies ahead. Press enter to open it.");
 	}
@@ -157,7 +157,7 @@ void lvl4(Character *c) {
 		eprintf("There is no time to lose: %s opts to continue down the corridor", c->name);
 	}
 	eprintf("The corridor continues straight down a metallic, featureless hallway.");
-	item_or_spell_found(c, IRON_PELLET, "Sitting on a glass pedestal is a gooey, metalic, and fragrent substance.");
+	item_or_spell_found(c, IRON_PELLET, "Sitting on a glass pedestal is a gooey, metalic, and fragrent substance.\n");
 	eprintf("%s continues down the suprisingly inornate hall.", c->name);
 	eprintf("Suddenly the hallway ends. A massive statue of pure metal stands many meters tall.");
 	eprintf("A pool of water sits below. A sign reads:\n\t\"Offer up all belongings to tread upon the %spath of righteousness%s.\"", C_PURPLE, C_RESET);
@@ -171,8 +171,9 @@ void lvl4(Character *c) {
 		eprintf("A prudent decision: who would give up such valuable resources at a time like this?");
 		item_or_spell_found(c, RED_POTION, "Behind the statue is a red potion!\n");
 	}
-	eprintf("Proceeding past the statue, %s finds heavy door shut closed by chains.", c->name);
+	eprintf("Proceeding past the statue, %s finds a heavy door shut closed by chains.", c->name);
 	eprintf("Press enter to break the chains and open the door.");
+	eprintf("Suddenly, a towering pile of stone stands up of its own free will!");
 	Character *m = newCharacter(" appears!", GOLEM);
 	combat_sequence(c, m, 3);
 }
@@ -184,7 +185,7 @@ void lvl5(Character *c) {
 	item_or_spell_found(c, GREATER_BLUE_POTION, "At the heart of the creature is a potion!\n");
 	eprintf("Suddenly, a bookshelf on the far wall slides aside, revealing stairs to the fourth floor!");
 	eprintf("Press enter to climb the stairs to the fourth floor of the mansion.");
-	item_or_spell_found(c, PANACEA, "On a pedastal in the center of the hall is a beautiful, rainbow-colored potion.\n");
+	item_or_spell_found(c, PANACEA, "On a pedestal in the center of the hall is a beautiful, rainbow-colored potion.\n");
 	eprintf("At the end of the hall lies a foreboding pair of black doors. Press enter to open them.");
 	eprintf("The next room is extravagantly decorated; stained glass windows adorn the walls, and a cloaked figure sits upon a magnificent throne.");
 	eprintf("He rises slowly from his throne, his crimson-red eyes striking fear into %s's heart.", c->name);
@@ -201,21 +202,21 @@ void lvl5(Character *c) {
 	eprintf("\"You fool! You dare think you can challenge me, Lord of all Vampires? You jest, %s.\"", c->name);
 	Character *m = newCharacter(" tears off his cloak, unsheaths a bejeweled rapier, and growls fiercely.", VAMPIRE_LORD);
 	printf("\"Your move, %s.\"\n", c->name);
-	combat_sequence(c, m, 0); // last fight so no level ups needed
+	combat_sequence(c, m, 0); /* last fight so no level ups needed */
 }
 
 void the_end(Character *c) {
 	eprintf(C_GREEN "\n---------- Conclusion ----------" C_RESET);
 	eprintf("The vampire burns into dust, his cloak and sword droping to the ground.");
 	eprintf("Beyond the Vampire Lord's lavish throne lies a simple wooden door. Press enter to open it.");
-	eprintf("Expecting the riches beyond imagination, %s is shocked: a sleep child awakes from bed and walks towards %s.", c->name, c->name);
+	eprintf("Expecting the riches beyond imagination, %s is shocked: a sleeping child awakes from bed and walks towards %s.", c->name, c->name);
 	eprintf("The little boy is adorable, but crooked eyes and pointed ears make obvious the child's lineage.");
 	eprintf("The Vampire Lord killed thousands of men in his long lifetime, and his son might very well do the same.");
 	eprintf("Human or vampire, a child left alone will surely die of hunger and solitude.");
 	bool isYes = yes_or_no("A decision must be made: " C_RED "kill the child" C_RESET " (Yes) or " C_GREEN "raise the child as your own" C_RESET " (No)?\n");
 	if(isYes) {
 		eprintf("The child's death is swift. The child's limp body droops to the ground.");
-		eprintf("%s places the child's detached head on his bed and leaves the mansion, sword stained by fresh blood.", c->name);
+		eprintf("%s places the child's detached head on his bed and leaves the mansion, sword stained with fresh blood.", c->name);
 		eprintf("%s returns to the village victorious to a life of fame and comfort.", c->name);
 		eprintf("All would come to know %s as the slayer of the Great Vampire Lord and his kin, a true hero.", c->name);
 	} else {

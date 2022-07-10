@@ -4,7 +4,7 @@
 #include "constants.h"
 #include "defs.h"
 
-#define DEFENSE_INCREASE 3
+#define DEFENSE_INCREASE 2
 #define MANA_INCREASE 5
 #define HEALTH_INCREASE 5
 
@@ -20,6 +20,7 @@ void tears(Character *c) {
 void iron_pellet(Character *c) {
 	printf("%s swallows the %s, hardening the skin.\n", c->name, ITEM_AND_SPELL_NAMES[c->itemSlot]);
 	sleep_ms(SLEEP_DURATION);
+	c->buff = DEFENSE_UP;
 	c->defense += DEFENSE_INCREASE;
 	printf("%s's defense has increased by %d!\n", c->name, DEFENSE_INCREASE);
 }
@@ -55,6 +56,7 @@ void light_vial(Character *user, Character *c) {
 void horn(Character *c) {
 	printf("%s blows the horn. The air trembles.\n", c->name);
 	sleep_ms(SLEEP_DURATION);
+	c->buff = HEALTH_AND_MANA_UP;
 	c->health += HEALTH_INCREASE;
 	c->totalHealth += HEALTH_INCREASE;
 	c->mana += MANA_INCREASE;

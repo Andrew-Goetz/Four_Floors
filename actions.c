@@ -104,9 +104,9 @@ void enemyStatus(Character *c, Character *m) {
 		"has a large scar across its hairy chest. It must be weak to physical attacks!\n", /* The Beast */
 		"seems vulnerable to fire.\n", /* The Killer Plant */
 		"is a creature of the night. The sun's rays would prove fatal.\n", /* The Wraith */
-		"is a powerful wizard, and magic would have no effect against him.\n", /* The Wizard */
-		"is an unthinking creature of destruction; attacking with massive physical blows, defense must be powerful against it!\n", /* The Wizard's Golem */
-		"is the ultimate foe. He has no obvious weakness weakness.\n" /* The Vampire Lord */
+		"is a powerful wizard. Magic has no effect against him.\n", /* The Wizard */
+		"is an unthinking creature of destruction. It will attack only with massive physical strikes!\n", /* The Wizard's Golem */
+		"is the ultimate foe. He has no clear weakness.\n" /* The Vampire Lord */
 	};
 	status(m);
 	printf("%s %s", MONSTER_NAMES[m->isMonster], MONSTER_HINTS[m->isMonster]); //prints out hints/descriptions here
@@ -140,7 +140,9 @@ void help(Character *c) {
 				"\tPotions, items, and spells can be found after each battle.\n"
 				"\tItems and potions can only be used once, while spells can be used as long as there is enough mana to cast them.\n"
 				"\tCertain items, spells, and potions are very effective against certain enemies.\n"
-				"\tAt least 1 level up occurs after each battle; this will automatically save the game.\n");
+				"\tAt least 1 level up occurs after each battle. It's best to focus on leveling 2 stats."
+				"\tThe parry ability is available to the Duelist class. It can deflect the next melee attack.\n"
+				"\tParries cannot deflect spells or extremely quick attacks, so use with care.\n");
 				//"\t\n"
 	} else {
 		printf("Ok then.\n");

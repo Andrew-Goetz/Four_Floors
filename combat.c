@@ -91,6 +91,7 @@ void monsterAction(Character *m, Character *c) {
 	if(m->effect == STUN)
 		return;
 	int r = rand() % 100;
+	printf("\nDEBUG: r\%14=%d\n\n", r%14);
 	switch(m->isMonster) {
 		case WRAITH:
 			/* TODO: maybe some attack that adds DRAIN affliction? */
@@ -135,6 +136,7 @@ void monsterAction(Character *m, Character *c) {
 					break;
 				case 6: case 7:
 					parry(m);
+					break;
 				case 12: case 13:
 					if(m->totalHealth - m->health >= m->attack) {
 						blood_reap(m, c);

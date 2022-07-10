@@ -35,7 +35,7 @@ static const int MONSTER_STATS[MONSTERS_IN_GAME][4] = {
 	/* Killer Plant */ 		{9, 0, 3, 1}, /* Almost 1 shot by fireball */
 	/* Wraith */ 			{8, 2, 3, 1}, /* Increased damage from light vial */
 	/* Mad Wizard */ 		{11, 7, 3, 1}, /* Immune to magic, casts a lot of spells */
-	/* Golem */			 	{12, 0, 4, 3}, /* All physical damage so iron pellet good against him */
+	/* Golem */			 	{12, 0, 5, 3}, /* All physical damage so iron pellet good against him */
 	/* Vampire Lord */		{11, 3, 4, 2} /* A number of special unique moves */
 };
 
