@@ -1,29 +1,29 @@
 CC:= gcc
 CFLAGS:= -O3 -g #-g -Wall -pedantic -O3
 TARGET:= four_floors
-OBJECT_FILES:= utility.o character.o potions.o items.o spells.o actions.o combat.o levels.o
+OBJECT_FILES:= src/utility.o src/character.o src/potions.o src/items.o src/spells.o src/actions.o src/combat.o src/levels.o
 
-all:			main.o $(OBJECT_FILES)
-		$(CC) main.o $(OBJECT_FILES) -o $(TARGET)
+all:			src/main.o $(OBJECT_FILES)
+		$(CC) src/main.o $(OBJECT_FILES) -o $(TARGET)
 
-main.o:			defs.h $(OBJECT_FILES)
+main.o:			src/defs.h $(OBJECT_FILES)
 
-utility.o:		utility.c defs.h constants.h
+utility.o:		src/utility.c defs.h constants.h
 
-character.o:	character.c defs.h constants.h utility.o
+character.o:	src/character.c src/defs.h src/constants.h src/utility.o
 
-potions.o:		potions.c defs.h constants.h character.o utility.o
+potions.o:		src/potions.c src/defs.h src/constants.h src/character.o src/utility.o
 
-items.o:		items.c defs.h constants.h character.o utility.o
+items.o:		src/items.c src/defs.h src/constants.h src/character.o src/utility.o
 
-spells.o:		spells.c defs.h constants.h character.o utility.o
+spells.o:		src/spells.c src/defs.h src/constants.h src/character.o src/utility.o
 
-actions.o:		actions.c defs.h constants.h character.o utility.o potions.o items.o spells.o
+actions.o:		src/actions.c src/defs.h src/constants.h src/character.o src/utility.o src/potions.o src/items.o src/spells.o
 
-combat.o:		combat.c defs.h constants.h character.o utility.o potions.o items.o spells.o actions.o
+combat.o:		src/combat.c src/defs.h src/constants.h src/character.o src/utility.o src/potions.o src/items.o src/spells.o src/actions.o
 
-levels.o:		levels.c defs.h constants.h character.o utility.o potions.o items.o spells.o actions.o combat.o
+levels.o:		src/levels.c src/defs.h src/constants.h src/character.o src/utility.o src/potions.o src/items.o src/spells.o src/actions.o src/combat.o
 
 .PHONY:		clean
 clean:
-	rm -f *.o $(TARGET)
+	rm -f src/*.o $(TARGET)
