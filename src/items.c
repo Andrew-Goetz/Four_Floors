@@ -100,6 +100,8 @@ void buff_revert(Character *c) {
 		case DEFENSE_UP:
 			c->defense -= DEFENSE_INCREASE;
 			printf("%s's defense have reverted to normal.\n", c->name);
+			break;
+
 		case HEALTH_AND_MANA_UP:
 			c->totalHealth -= HEALTH_INCREASE;
 			c->totalMana -= MANA_INCREASE;
@@ -108,6 +110,8 @@ void buff_revert(Character *c) {
 			if(c->mana >= c->totalMana)
 				c->mana = c->totalMana;
 			printf("%s's health and mana have reverted to normal.\n", c->name);
+			break;
+
 		default:
 			break;
 	}
