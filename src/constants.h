@@ -2,7 +2,7 @@
 #define CONSTANTS_H
 
 /*********** Constants ************/
-#define MAX_INPUT_LENGTH 40/* No input greater than MAX_INPUT_LENGTH characters allowed */
+#define MAX_INPUT_LENGTH 32/* No input greater than MAX_INPUT_LENGTH characters allowed */
 #define SPELLS_IN_GAME 5+1 /* Number of spells in the game, first element left blank (hence the +1) */
 #define STATUS_EFFECT_NUM 9 /* Number of status effects in the game, including NONE status effect */
 #define MONSTERS_IN_GAME 7 /* Number of monsters in the game, including the player character */
@@ -162,5 +162,32 @@ static const char *ITEM_AND_SPELL_DESCRIPTIONS[16] = {
 	"A drop of pure sunlight, captured in a vial by coastal wizards.\nSmashing this vial will drown a room in the light of day, blinding enemies.",
 	"A horn once sounded by Saul, a servant of the gods.\nBlowing this horn will shatter it, temporarily granting its user the strength of the gods."
 };
+
+/* PROGRESS_[LEVEL]_[PART] */
+typedef enum GAME_PROGRESS {
+    PROGRESS_0,
+    PROGRESS_1,
+    PROGRESS_1_1,
+    PROGRESS_1_2,
+    PROGRESS_1_3,
+    PROGRESS_2,
+    PROGRESS_2_1,
+    PROGRESS_2_2,
+    PROGRESS_2_3,
+    PROGRESS_3,
+    PROGRESS_3_1,
+    PROGRESS_3_2,
+    PROGRESS_3_3,
+    PROGRESS_4,
+    PROGRESS_4_1,
+    PROGRESS_4_2,
+    PROGRESS_4_3,
+    PROGRESS_5,
+    PROGRESS_5_1,
+    PROGRESS_5_2,
+    PROGRESS_5_3,
+    PROGRESS_FINAL,
+    PROGRESS_RESET, // when game done, relaunch of game will prompt to reset save
+} GameProgress;
 
 #endif

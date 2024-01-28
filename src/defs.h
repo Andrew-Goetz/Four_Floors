@@ -97,8 +97,7 @@ void lvl5(Character *c);
 void the_end(Character *c);
 
 /* saves.c */
-int init_save(char *name);
-int load_save(void);
-int save(void);
+int save_load(Character *c, GameProgress *p);
+int save_write(Character *c, GameProgress p);
 
 #endif
